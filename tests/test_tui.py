@@ -1295,3 +1295,90 @@ async def test_cyberglm_picker_filters_routes_and_updates_active_model(settings)
         assert app.engine.thread_id is None
         assert app.state.api_health == "unverified"
         assert "CyberKimi" in app.query_one("#log").border_title
+
+
+@pytest.mark.parametrize("after_turn", [False, True])
+@pytest.mark.parametrize("preview", ["Hello from CyberGLM.", "Hello from"])
+async def test_delayed_response_preview_is_not_printed_twice(
+    settings, monkeypatch, after_turn, preview,
+):
+    app = VelocicyberApp(settings)
+    app.state.collection = app.state.upload_approved = False
+    answer = "Hello from CyberGLM."
+    previews = []
+
+    async def run(prompt, callback):
+        callback({"type": "item.completed", "item": {
+            "type": "agent_message", "text": answer,
+        }})
+        if after_turn:
+            callback({"type": "turn.completed"})
+        # The proxy posts previews from another thread, independently of engine stdout.
+        asyncio.get_running_loop().call_soon(callback, {
+            "type": "provider.progress", "stage": "Writing response", "text": preview,
+        })
+        await asyncio.sleep(0)
+        previews.append(app.live_text)
+        if not after_turn:
+            callback({"type": "turn.completed"})
+
+    monkeypatch.setattr(app.engine, "run", run)
+    async with app.run_test(size=(100, 30)):
+        await app.run_prompt("Hello.").wait()
+        transcript = app.query_one("#log")._copy_text
+        assert previews == [""]
+        assert transcript.count(answer) == 1
+        assert "Partial response:" not in transcript
+        assert not app.query_one("#live-response").display
+        assert not app.task_failed and "Task complete" in app.activity
+
+
+@pytest.mark.parametrize("earlier_answer", [False, True])
+async def test_interrupted_response_keeps_unfinished_text(settings, monkeypatch, earlier_answer):
+    app = VelocicyberApp(settings)
+    app.state.collection = app.state.upload_approved = False
+
+    async def run(prompt, callback):
+        if earlier_answer:
+            callback({"type": "item.completed", "item": {
+                "type": "agent_message", "text": "Checking the project.",
+            }})
+        callback({"type": "provider.progress", "stage": "Writing response",
+                  "text": "Checking the project. Found an unfinished"})
+        raise RuntimeError("Fixture connection interrupted")
+
+    monkeypatch.setattr(app.engine, "run", run)
+    async with app.run_test(size=(100, 30)):
+        await app.run_prompt("Check the project.").wait()
+        transcript = app.query_one("#log")._copy_text
+        assert "Partial response:\nChecking the project. Found an unfinished" in transcript
+        assert transcript.count("Found an unfinished") == 1
+        assert app.task_failed and not app.query_one("#live-response").display
+
+
+async def test_response_preview_completion_resets_for_followup(settings, monkeypatch):
+    app = VelocicyberApp(settings)
+    app.state.collection = app.state.upload_approved = False
+    calls = []
+    answer = "Hello again."
+
+    async def run(prompt, callback):
+        calls.append(prompt)
+        callback({"type": "provider.progress", "stage": "Writing response", "text": answer})
+        assert app.live_text == answer
+        if len(calls) == 1:
+            callback({"type": "item.completed", "item": {
+                "type": "agent_message", "text": answer,
+            }})
+            callback({"type": "turn.completed"})
+        else:
+            raise RuntimeError("Fixture connection interrupted")
+
+    monkeypatch.setattr(app.engine, "run", run)
+    async with app.run_test(size=(100, 30)):
+        await app.run_prompt("Hello.").wait()
+        await app.run_prompt("Again.").wait()
+        transcript = app.query_one("#log")._copy_text
+        assert transcript.count(answer) == 2
+        assert "Partial response:\nHello again." in transcript
+        assert app.task_failed

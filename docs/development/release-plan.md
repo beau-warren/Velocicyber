@@ -329,3 +329,21 @@ paths containing spaces, quotes, dollar signs, backticks, percent signs, equals
 signs and backslashes. Ruff passed. All shortcut tests used temporary directories;
 no real desktop shortcuts, model inference or GPU resources were created. The
 working prototype is preserved.
+
+
+<a name="completed-response-display--2026-11-04"></a>
+
+## ![Completed response display — 2026-11-04](../../assets/docs/headings/h2-completed-response-display--2026-11-04.svg)
+
+- [x] Prevent delayed provider previews from repeating an already displayed
+  answer under “Partial response”. Native completion and proxy progress arrive
+  independently; ignore preview text already covered by a completed response.
+- [x] Preserve unfinished text after interruption, including after an earlier
+  completed message, and reset preview tracking for each follow-up prompt.
+- [x] Keep the change in the interface layer; inference requests, stored
+  conversations, dataset records and the engine remain unchanged.
+
+Validation: reproduced the duplicate with an offline delayed-callback fixture
+before the fix. All 47 interface tests passed, including seven new cases for
+late full/prefix previews, interruptions and follow-up turns. Ruff passed.
+No live model calls, GPU launches or dataset uploads were needed.

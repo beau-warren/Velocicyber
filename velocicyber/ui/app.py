@@ -94,6 +94,7 @@ class VelocicyberApp(App):
         self.command_items = {}
         self.live_text = ""
         self.shown_live_text = ""
+        self.completed_responses = set()
         self.reply_model = ""
         self.reply_provider = ""
         self.pi_install_notified = False
@@ -1441,6 +1442,14 @@ class VelocicyberApp(App):
         else:
             self.say("Unknown command. Type /help.")
 
+    def pending_response_text(self, text):
+        # Provider previews arrive independently of native engine completion events.
+        # A late preview may be the whole answer or an earlier prefix of it.
+        preview = text.strip()
+        if preview and any(reply.startswith(preview) for reply in self.completed_responses):
+            return ""
+        return text
+
     def engine_event(self, event):
         kind = event.get("type")
         if kind == "sentinel.stopped":
@@ -1478,7 +1487,7 @@ class VelocicyberApp(App):
             if not self.busy:
                 return
             self.activity = event["stage"]
-            self.live_text = event.get("text", "")
+            self.live_text = self.pending_response_text(event.get("text", ""))
         elif kind == "tool.error":
             self.say(
                 f"Tool error ({event.get('tool', 'tool')}): {event['message']}\n"
@@ -1502,10 +1511,11 @@ class VelocicyberApp(App):
             if item.get("type") == "agent_message":
                 if kind == "item.completed":
                     if item.get("text", "").strip():
+                        self.completed_responses.add(item["text"].strip())
                         self.live_text = ""
                         self.say("\nVelocicyber:\n" + item["text"])
                 else:
-                    self.live_text = item.get("text", "")
+                    self.live_text = self.pending_response_text(item.get("text", ""))
                 self.activity = "Writing response"
             elif item.get("type") == "command_execution":
                 command = item["command"]
@@ -1628,6 +1638,7 @@ class VelocicyberApp(App):
         self.compacting = False
         self.command_items = {}
         self.live_text = ""
+        self.completed_responses.clear()
         self.activity = "Starting agent"
         self.show_conversation()
         self.say("\nYou: " + prompt)
@@ -1673,8 +1684,8 @@ class VelocicyberApp(App):
                     await self.flush_uploads()
                 except Exception as exc:
                     self.say("Upload pending: " + str(exc))
-            if self.live_text:
-                self.say("Partial response:\n" + self.live_text)
+            if partial := self.pending_response_text(self.live_text):
+                self.say("Partial response:\n" + partial)
             self.live_text = ""
             self.busy = False
             self.compacting = False
