@@ -280,3 +280,24 @@ or carefully reapply unpublished changes onto the cleaned history; merging or
 pushing an old branch can reintroduce the personal address. The working prototype
 and separate validation checkout were not modified. This is a metadata cleanup,
 not an application change; no provider inference or GPU operations were needed.
+
+<a name="fresh-repository-replacement--2026-11-04"></a>
+
+## ![Fresh repository replacement — 2026-11-04](../../assets/docs/headings/h2-fresh-repository-replacement--2026-11-04.svg)
+
+- [x] Back up the original repository and copy its tracked source into an
+  independent repository with a fresh root commit and a noreply identity.
+- [x] Preserve both README branding images as local assets, so they do not
+  depend on attachments belonging to the original repository.
+- [x] Verify all 205 source/assets files, credential scanning, and the absence
+  of the old email-bearing commit in the replacement repository.
+- [ ] Delete the original private repository. GitHub rejected the API deletion
+  with HTTP 403 because the current token lacks repository deletion access.
+- [ ] Rename the verified replacement to Velocicyber and switch the release
+  checkout to its new history after deletion succeeds.
+
+The replacement is temporarily named `Velocicyber-clean-20261104` and remains
+private. The original remains private and intact. The working prototype is
+unchanged. A private recovery bundle and migration records are retained outside
+tracked files. Existing clones must not push their previous history into the
+replacement repository.
