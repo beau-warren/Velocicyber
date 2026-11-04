@@ -77,6 +77,7 @@ The first launch runs setup before opening the main menu. Every optional item ca
 5. **Sentinel LLM dataset:** `your-account/sentinel-data` — a separate dataset.
 6. Optional, explicitly confirmed creation of missing Hugging Face datasets as **private**. Existing datasets retain their visibility. This step uploads no training records.
 7. Optional execution engine/API client installation and optional Pi model downloads.
+8. Optional desktop launcher with the bundled neon V icon, when a Linux desktop folder is available. Enter skips it.
 
 Credentials are saved to `.env`; dataset destinations are saved to `Modules.txt`. Setup writes these files with owner-only permissions (`0600`). Both files are excluded from Git. Configuration is parsed as data, never sourced as shell code.
 
@@ -89,6 +90,26 @@ Repeat setup or check the installation:
 ```
 
 `doctor` and the UI demo make no provider requests. Setup never launches GPUs. Normal UI startup checks the upstream engine release status; an update still requires manual approval. Headless launches skip interactive setup; use the example files below first.
+
+<a name="desktop-shortcut"></a>
+
+### ![Desktop shortcut](../assets/docs/headings/h3-desktop-shortcut.svg)
+
+On the first interactive launch, setup offers **Create a desktop launcher and
+Velocicyber icon?** Choose `y` to add it, or press Enter to skip. To add it later,
+run `./velocicyber.sh setup`; existing settings can be kept with Enter.
+
+The shortcut uses the bundled neon-green V with its pink shadow and opens the
+harness in your desktop's default terminal. Setup respects the configured Linux
+desktop folder, including localized names. It creates no shortcut in headless
+setup or when no desktop folder is available. No administrator access is needed.
+
+Existing shortcuts are preserved. If another installation already owns
+`Velocicyber.desktop`, the new one gets a numbered filename; repeating setup for
+the same installation reuses its matching shortcut. Some desktops require
+**Allow Launching** or **Trust and Launch** before the first use. If you move the
+installation folder, rerun setup from the new location and remove the old shortcut.
+Creating the shortcut does not start the harness, download models or launch GPUs.
 
 <a name="manual-configuration"></a>
 

@@ -13,6 +13,7 @@ from pathlib import Path
 
 from velocicyber.config import Settings
 from velocicyber.datasets.pipeline import Scrubber
+from velocicyber.desktop import desktop_directory, install_shortcut
 from velocicyber.models.pi_profiles import BUGTRACE_PI_REPO, PI_MODEL_REPO
 
 CREDENTIALS = (
@@ -181,6 +182,18 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
         print("Choose 1, 2, 3, or Enter to skip for now.")
     for model in models:
         install_component(root, "install_pi_model.py", "--model", model)
+    directory = desktop_directory()
+    if directory is not None:
+        if confirm("Create a desktop launcher and Velocicyber icon? Enter skips for now", input_fn):
+            try:
+                shortcut = install_shortcut(root, directory)
+                print("Desktop launcher ready: " + str(shortcut))
+                print("If your desktop asks, choose Allow Launching or Trust and Launch.")
+            except (OSError, ValueError) as exc:
+                print("Desktop shortcut could not be created: " + str(exc))
+                print("Continue normally; run ./velocicyber.sh setup to retry later.")
+    else:
+        print("Desktop shortcut skipped: no Linux desktop folder was found.")
     payload = {"schema": 1, "completed_at": datetime.now(timezone.utc).isoformat()}
     descriptor, temporary = tempfile.mkstemp(prefix="setup-", dir=settings.runtime)
     try:

@@ -23,6 +23,8 @@ def isolated_setup(monkeypatch):
         pytest.fail("Unexpected dataset creation")
 
     monkeypatch.setattr(onboarding, "install_component", no_install)
+    monkeypatch.setattr(onboarding, "desktop_directory", lambda: None)
+    monkeypatch.setattr(onboarding, "install_shortcut", no_install)
     monkeypatch.setattr("huggingface_hub.HfApi.create_repo", no_create)
 
 
@@ -165,3 +167,32 @@ def test_example_configuration_is_portable_and_local_overrides_win(tmp_path):
     settings = Settings.load(tmp_path)
     assert settings.dataset_repo == "owner/main"
     assert len(settings.gpu_model_choices) == 5
+
+
+@pytest.mark.parametrize("choice,created", [("yes", True), ("", False), ("n", False)])
+def test_desktop_launcher_requires_explicit_choice(tmp_path, monkeypatch, choice, created):
+    directory = tmp_path / "Desktop"
+    calls = []
+    monkeypatch.setattr(onboarding, "desktop_directory", lambda: directory)
+
+    def install(root, destination):
+        calls.append((root, destination))
+        return destination / "Velocicyber.desktop"
+
+    monkeypatch.setattr(onboarding, "install_shortcut", install)
+    assert setup(tmp_path, ("", "", "n", "", choice))
+    assert calls == ([(tmp_path, directory)] if created else [])
+    assert not setup(tmp_path)  # Completed setup does not ask on every launch.
+
+
+def test_optional_desktop_failure_does_not_block_setup(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(onboarding, "desktop_directory", lambda: tmp_path / "Desktop")
+
+    def fail(*args):
+        raise PermissionError("Desktop folder is read-only")
+
+    monkeypatch.setattr(onboarding, "install_shortcut", fail)
+    assert setup(tmp_path, ("", "", "n", "", "y"))
+    assert (tmp_path / ".runtime" / onboarding.MARKER).is_file()
+    output = capsys.readouterr().out
+    assert "could not be created" in output and "setup to retry later" in output

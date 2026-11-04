@@ -98,6 +98,7 @@ skipped. Keys stay in your local `.env`; other settings go in `Modules.txt`.
 Collection and uploads start **OFF**. No GPU model is selected automatically, and
 model weights are downloaded only through an explicit setup/model selection.
 Lambda use also requires your own registered SSH key; see [SSH setup](ssh-keys/README.md).
+On Linux desktops, setup also offers an optional [desktop launcher and neon V icon](docs/installation.md#desktop-shortcut); press Enter to skip.
 
 For a download without Git, use the [curl installation instructions](docs/installation.md#download-with-curl).
 Downloading requires GitHub read access.

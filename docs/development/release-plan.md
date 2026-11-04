@@ -310,3 +310,22 @@ Git metadata and migration records are retained outside tracked files. Existing
 clones must be re-cloned, or have unpublished changes carefully reapplied, before
 pushing; do not merge or push previous history into this replacement. Application
 tests were not repeated because executable code did not change.
+
+<a name="optional-desktop-launcher--2026-11-04"></a>
+
+## ![Optional desktop launcher — 2026-11-04](../../assets/docs/headings/h2-optional-desktop-launcher--2026-11-04.svg)
+
+- [x] Offer a desktop launcher and bundled neon V icon during first-run setup,
+  with explicit opt-in, Enter to skip, and a later retry through setup.
+- [x] Respect configured Linux desktop folders, skip unavailable/headless
+  desktops, preserve existing shortcuts and reuse matching installations.
+- [x] Generate installation-specific paths using desktop-entry quoting and
+  launch in the user's default terminal without starting anything at setup time.
+- [x] Keep shortcut failures optional so the remaining setup can complete.
+
+Validation: 43 focused onboarding, desktop and CLI tests passed. Native
+`desktop-file-validate` and a Gio launch of a harmless temporary fixture verified
+paths containing spaces, quotes, dollar signs, backticks, percent signs, equals
+signs and backslashes. Ruff passed. All shortcut tests used temporary directories;
+no real desktop shortcuts, model inference or GPU resources were created. The
+working prototype is preserved.
