@@ -34,8 +34,8 @@
 - [ ] Choose a license for original harness code before making the repository public.
 - [ ] Run a clean Pi install and opt-in model installation on a separate test installation.
 - [ ] Conduct a wider security review; automated scanning cannot establish absence of all vulnerabilities.
-- [ ] Ask GitHub Support to remove retained pre-rewrite commit views containing
-  a personal email address before public release; verify the result.
+- [x] Replace the former repository with independent fresh history and verify
+  that the old email-bearing commit is unavailable in the replacement.
 
 <a name="checkpoint"></a>
 
@@ -271,9 +271,9 @@ not needed.
   parent relationships are preserved. The rewrite changes 23 commit IDs; prior
   commit signatures cannot be retained after their signed metadata changes.
 - [x] Publish using an exact force-with-lease and sync this clean release checkout.
-- [ ] Request GitHub-side cleanup: a pre-rewrite commit remains accessible by
-  its exact SHA. A private support-request draft and recovery bundle are kept
-  outside tracked files. Repository visibility remains private.
+- [x] Superseded by the fresh repository replacement on 2026-11-04 below.
+  The former repository was deleted; its retained history was not imported
+  into the replacement. Private recovery records remain outside tracked files.
 
 Other existing clones retain their old history. Re-clone before further work,
 or carefully reapply unpublished changes onto the cleaned history; merging or
@@ -291,13 +291,22 @@ not an application change; no provider inference or GPU operations were needed.
   depend on attachments belonging to the original repository.
 - [x] Verify all 205 source/assets files, credential scanning, and the absence
   of the old email-bearing commit in the replacement repository.
-- [ ] Delete the original private repository. GitHub rejected the API deletion
-  with HTTP 403 because the current token lacks repository deletion access.
-- [ ] Rename the verified replacement to Velocicyber and switch the release
-  checkout to its new history after deletion succeeds.
+- [x] Confirm the owner deleted the original private repository after GitHub
+  rejected API deletion with HTTP 403. The original repository ID returns 404.
+- [x] Rename the verified replacement to `beau-warren/Velocicyber` and switch
+  the release checkout to a fresh clone of its independent history.
 
-The replacement is temporarily named `Velocicyber-clean-20261104` and remains
-private. The original remains private and intact. The working prototype is
-unchanged. A private recovery bundle and migration records are retained outside
-tracked files. Existing clones must not push their previous history into the
-replacement repository.
+The replacement is private at the original project URL. Its initial import
+contains the existing application code unchanged, with the two README images
+stored locally and their links updated. The migration checkpoint adds one SVG,
+bringing the tracked total to 206 files. The old email-bearing commit returns
+404 through the replacement repository's API, and new commits use the verified
+GitHub noreply identity. The historical checkpoints above describe work done
+before this replacement; their original commits and tags are not included in
+the new repository.
+
+The working prototype is unchanged. A private recovery bundle, previous local
+Git metadata and migration records are retained outside tracked files. Existing
+clones must be re-cloned, or have unpublished changes carefully reapplied, before
+pushing; do not merge or push previous history into this replacement. Application
+tests were not repeated because executable code did not change.
