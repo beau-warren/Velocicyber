@@ -1,0 +1,47 @@
+{
+  "llama_cpp_image": "ghcr.io/ggml-org/llama.cpp@sha256:0192ab2545efcbe79c240645e34abd8fffbe4813aedcef5a0e3a886ef6d6d82f",
+  "llama_cpp_source_tag": "server-cuda",
+  "vllm_image": "vllm/vllm-openai:v0.23.0",
+  "checked_on": "2026-09-22",
+  "model_images": {
+    "orcarouter/OrcaCyber-Nano-1.0": {
+      "image": "ghcr.io/ggml-org/llama.cpp@sha256:f66a5229a3e0586339d16155e9fe09c37834d7a7f4134bbdee7360b5a1f2546d",
+      "source_tag": "server-cuda",
+      "source_revision": "31288c9c66e59377f7788d920678a565bb89dd37",
+      "version": "b11723",
+      "checked_on": "2026-10-19",
+      "backend": "llama.cpp",
+      "reason": "Official linux/amd64 CUDA 12.8.1 image; Qwen3.5 GGUF header verified for Mix-15.7G. One 32K text/coding slot; Lambda validation pending."
+    },
+    "Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16": {
+      "image": "vllm/vllm-openai@sha256:3e10e8189823e0f7ae4620c271bcdaaf64127ec7d0edc351591a508498b7684a",
+      "source_tag": "v0.29.0-cu129",
+      "checked_on": "2026-10-08",
+      "reason": "Avoid torchvision::nms import crash in v0.30.0-cu129 (vllm-project/vllm#59057); runtime and basic coding check passed on H100 SXM5 2026-10-08; longer-session interruption under investigation"
+    },
+    "Blackfrost-AI/CYBER-FROST-3.8-BF16": {
+      "image": "vllm/vllm-openai@sha256:a67f8f186d4567612ac37a55bd82295006002b18858eb12a8af2f05f86c2ae3f",
+      "source_tag": "v0.30.0-cu129",
+      "checked_on": "2026-10-05"
+    },
+    "Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold": {
+      "base_source_tag": "26.07-py3",
+      "source_revision": "ed78d6fc204d89d90b045bf033d6551e7714f3a1",
+      "source_url": "https://codeload.github.com/ashhart/TensorFold/tar.gz/ed78d6fc204d89d90b045bf033d6551e7714f3a1",
+      "source_sha256": "e8f8bb73a45aa8e9dd2700201981ba6021ffb12add58331e825c51ebb53fdb1d",
+      "checked_on": "2026-10-12",
+      "image": "nvcr.io/nvidia/pytorch@sha256:957c0efe3102b45e5b430625b64b3fe131c49013729af0c34f5c71e906d3cf77",
+      "backend": "tensorfold",
+      "reason": "Python 0.6 branch supports GLM EXL3 on two CUDA ranks; Lambda B200 live validation pending. Native 1.x is a separate runtime."
+    },
+    "Blackfrost-AI/SAGE-A1P5-DERISKED-BF16-V2": {
+      "image": "vllm/vllm-openai@sha256:3e10e8189823e0f7ae4620c271bcdaaf64127ec7d0edc351591a508498b7684a",
+      "source_tag": "v0.29.0-cu129",
+      "checked_on": "2026-10-23",
+      "backend": "vllm",
+      "reason": "Pinned vLLM source supports Qwen3_5MoeForConditionalGeneration; reuse the image already checked with M.O.G. SAGE 32K BF16/float32 SSM text+tools profile: live Lambda validation pending.",
+      "reviewed_model_revision": "625ca8d6528fcb65407a7e5685778b8d4b16022c",
+      "reviewed_weight_bytes": 71908134368
+    }
+  }
+}

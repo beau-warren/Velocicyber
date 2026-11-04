@@ -1,0 +1,145 @@
+"""Model-specific GPU requirements; estimates do not imply live validation."""
+
+import re
+from dataclasses import dataclass
+
+CYBER_FROST_REPO = "Blackfrost-AI/CYBER-FROST-3.8-BF16"
+MOG_SEC_REPO = "Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16"
+GLM53_EXL3_REPO = "Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold"
+ORCACYBER_REPO = "orcarouter/OrcaCyber-Nano-1.0"
+SAGE_REPO = "Blackfrost-AI/SAGE-A1P5-DERISKED-BF16-V2"
+
+
+@dataclass(frozen=True)
+class ServingProfile:
+    family: str
+    context_window: int
+    minimum_vram_gib: int
+    minimum_host_memory_gib: int
+    minimum_disk_gib: int
+    gpu_families: tuple[str, ...]
+    gpu_counts: tuple[int, ...]
+    arguments: tuple[str, ...]
+    notice: str
+    backend: str = "vllm"
+    gguf_filename: str = ""
+
+    def supports_hardware(self, description, gpu_count):
+        return gpu_count in self.gpu_counts and any(
+            re.search(r"(?:^|[^a-z0-9])" + family + r"(?:$|[^a-z0-9])", description, re.I)
+            for family in self.gpu_families
+        )
+
+    def hardware_requirements(self):
+        return (
+            f"Supported GPUs: {', '.join(self.gpu_families)}; "
+            f"GPU counts: {', '.join(map(str, self.gpu_counts))}; "
+            f"at least {self.minimum_host_memory_gib} GiB host RAM and "
+            f"{self.minimum_disk_gib} GiB disk."
+        )
+
+
+GPU_PROFILES = {
+    SAGE_REPO: ServingProfile(
+        family="qwen3_5_moe",
+        context_window=32768,
+        minimum_vram_gib=96,
+        minimum_host_memory_gib=128,
+        minimum_disk_gib=256,
+        gpu_families=("H100", "H200", "B200", "B300"),
+        gpu_counts=(1, 2, 4, 8),
+        arguments=(
+            "--dtype", "bfloat16",
+            "--mamba-ssm-cache-dtype", "float32",
+            "--language-model-only",
+        ),
+        notice=(
+            "Lambda GPU required · ~36B MoE · 71.9 GB BF16 weights (~67.0 GiB).\n"
+            "Recommended: Single 180 GB (B200). No cluster required.\n"
+            "Conservative profile minimum: 96 GiB total VRAM; 80 GB is not enabled.\n"
+            "Harness context: 32K, text/coding, one request at a time.\n"
+            "Projected requirements; Lambda inference/tool use awaiting live validation."
+        ),
+    ),
+    ORCACYBER_REPO: ServingProfile(
+        family="qwen35",
+        context_window=32768,
+        minimum_vram_gib=24,
+        minimum_host_memory_gib=32,
+        minimum_disk_gib=64,
+        gpu_families=("A10", "A6000", "A100", "H100", "H200", "B200", "B300"),
+        gpu_counts=(1,),
+        arguments=("--temp", "1.0", "--top-p", "0.95", "--top-k", "20"),
+        backend="llama.cpp",
+        gguf_filename="OrcaCyber-Nano-1.0-AI-Defense-Mix-15.7G.gguf",
+        notice=(
+            "Lambda GPU required · Mix-15.7G GGUF (15.70 GB / 14.62 GiB).\n"
+            "Minimum: Single 24 GB (A10). Recommended headroom: Single 48 GB (A6000).\n"
+            "Harness context: 32K, text/coding, one request at a time.\n"
+            "Projected requirements; Lambda inference/tool use awaiting live validation."
+        ),
+    ),
+    GLM53_EXL3_REPO: ServingProfile(
+        family="glm5_next",
+        context_window=32768,
+        minimum_vram_gib=256,
+        minimum_host_memory_gib=256,
+        minimum_disk_gib=512,
+        gpu_families=("B200",),
+        gpu_counts=(2,),
+        arguments=(),
+        backend="tensorfold",
+        notice=(
+            "Lambda GPUs required · 175.6 GB EXL3/BF16 weights (~163.6 GiB).\n"
+            "Experimental: Cluster 360 GB (2× B200); Lambda validation pending.\n"
+            "Planning allowance: 256 GiB total; two GPUs required. Single 180 GB is unsupported.\n"
+            "Harness context: 32K, text/coding, one request at a time.\n"
+            "Publisher tested 2× DGX Spark (128 GB each); its 1M context is not enabled here."
+        ),
+    ),
+    CYBER_FROST_REPO: ServingProfile(
+        family="qwen4_exp",
+        context_window=32768,
+        minimum_vram_gib=480,
+        minimum_host_memory_gib=512,
+        minimum_disk_gib=512,
+        gpu_families=("H100", "H200", "B200", "B300"),
+        gpu_counts=(4, 8),
+        arguments=(
+            "--dtype",
+            "bfloat16",
+            "--mamba-ssm-cache-dtype",
+            "bfloat16",
+            "--language-model-only",
+        ),
+        notice=(
+            "Lambda GPUs required · 360 GB BF16 weights.\n"
+            "Recommended first test: Cluster 720 GB (4× B200).\n"
+            "Alternatives: 640 GB (8× H100) or 1440 GB (8× B200).\n"
+            "32K context; Lambda inference/tool use awaiting live validation."
+        ),
+    ),
+    MOG_SEC_REPO: ServingProfile(
+        family="qwen3_5",
+        context_window=32768,
+        minimum_vram_gib=72,
+        minimum_host_memory_gib=128,
+        minimum_disk_gib=256,
+        gpu_families=("H100", "H200", "B200", "B300"),
+        gpu_counts=(1, 2, 4, 8),
+        arguments=(
+            "--dtype",
+            "bfloat16",
+            "--mamba-ssm-cache-dtype",
+            "float32",
+            "--language-model-only",
+        ),
+        notice=(
+            "Lambda GPUs required · 55.6 GB BF16 weights.\n"
+            "Recommended first test: Single 80 GB (H100); Single 180 GB (B200) also supported.\n"
+            "Harness context: 32K. The advertised 1M context needs a separate serving profile.\n"
+            "Basic coding/tool check passed on one H100 SXM5 (80 GB); "
+            "long-session stability still under investigation."
+        ),
+    ),
+}

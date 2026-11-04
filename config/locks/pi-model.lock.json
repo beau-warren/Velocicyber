@@ -1,0 +1,10 @@
+{
+  "repo": "mtrpires/Qwen3.5-35B-A3B-IQK-RPi5-16GB",
+  "revision": "13da7dc83725fb255c24e709eafb212068d7ce07",
+  "filename": "Qwen3.5-35B-A3B-IQK-RPi5-16GB.gguf",
+  "weight_bytes": 12229857568,
+  "sha256": "7eb0632656fdee1d3ecdcd3b8662d966b6bf88e5c14440eae653832e6e194524",
+  "runtime_repo": "https://github.com/ikawrakow/ik_llama.cpp.git",
+  "runtime_revision": "32cddbfcefed93896a39c64e7c38c119de8682e6",
+  "context_window": 16384
+}

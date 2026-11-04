@@ -1,0 +1,17 @@
+# Copy to Modules.txt to customize this installation. This file contains no credentials.
+# No GPU model is selected automatically.
+HUGGINGFACE_MODEL=
+LOCAL_MODEL_OPTIONS=Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16,orcarouter/OrcaCyber-Nano-1.0,Blackfrost-AI/CYBER-FROST-3.8-BF16,Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold,Blackfrost-AI/SAGE-A1P5-DERISKED-BF16-V2
+PI_LOCAL_MODEL=mtrpires/Qwen3.5-35B-A3B-IQK-RPi5-16GB
+PI_LOCAL_MODEL_OPTIONS=terrorswift/BugTraceAI-Apex-G4-26B-APEX-GGUF
+API_MODEL=lordx64/cyberkimi
+API_BASE_URL=https://api.adverserial.ai/v1
+# Use your existing Lambda SSH key name and a key stored under this checkout.
+LAMBDA_SSH_KEY_NAME=
+SSH_PRIVATE_KEY=ssh-keys/lambda.pem
+# Leave blank to choose an available compatible region.
+LAMBDA_REGION=
+# Optional, separate Hugging Face datasets owned by you. Upload permission is opt-in.
+FINETUNING_REPO=
+SENTINEL_FINETUNING_REPO=
+PRIVATE_HOSTS=

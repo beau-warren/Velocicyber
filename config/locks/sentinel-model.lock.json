@@ -1,0 +1,20 @@
+{
+  "repo": "ibm-granite/granite-guardian-4.1-8b-GGUF",
+  "model": "ibm-granite/granite-guardian-4.1-8b",
+  "revision": "bc78f0995361543a70438fe44a60bb7613fed2f0",
+  "filename": "granite-guardian-4.1-8b-Q4_K_M.gguf",
+  "weight_bytes": 5116703808,
+  "sha256": "979114c9e6a589a1e37c2d597677555d3eb78c2856e920ed4ec97f7bded787a4",
+  "context_window": 4096,
+  "minimum_available_gib": 7,
+  "runtime": {
+    "repo": "ggml-org/llama.cpp",
+    "release": "v0.7.0",
+    "tag": "b11669",
+    "filename": "llama-b11669-bin-ubuntu-arm64.tar.gz",
+    "binary": "llama-b11669/llama-server",
+    "bytes": 13900160,
+    "sha256": "9ac6fda2058d35677608a06f751a50122ddfa4ce0ddb7f084466b8e79b6d4a99",
+    "url": "https://github.com/ggml-org/llama.cpp/releases/download/b11669/llama-b11669-bin-ubuntu-arm64.tar.gz"
+  }
+}

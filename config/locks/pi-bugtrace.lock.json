@@ -1,0 +1,22 @@
+{
+  "repo": "terrorswift/BugTraceAI-Apex-G4-26B-APEX-GGUF",
+  "revision": "0f5564d4f71e8fd06e1ab3017be3ac2669ffc506",
+  "filename": "BugTraceAI-Apex-G4-26B-APEX-Mini.gguf",
+  "weight_bytes": 12258866208,
+  "sha256": "c87bd3439b9e249522fbdcd43104fef2fd5a192da55bcced5b53ea3b3c2a644e",
+  "runtime_repo": "https://github.com/ikawrakow/ik_llama.cpp.git",
+  "runtime_revision": "32cddbfcefed93896a39c64e7c38c119de8682e6",
+  "context_window": 8192,
+  "minimum_available_gib": 13,
+  "chat_template": {
+    "path": "chat-templates/gemma4.jinja",
+    "sha256": "85a08664d16d8f3be4416c92427b3ac10df1024ac566cc0b4bc3bab409393f98",
+    "source": "https://github.com/ikawrakow/ik_llama.cpp/blob/32cddbfcefed93896a39c64e7c38c119de8682e6/models/templates/google-gemma-4-31B-it.jinja"
+  },
+  "server_args": [
+    "--swa-compress", "-ctk", "q8_0", "-ctv", "q8_0",
+    "--cache-ram", "0", "--ctx-checkpoints", "2",
+    "--reasoning", "off", "--temp", "0.1", "--top-p", "0.9",
+    "--top-k", "20", "--min-p", "0.0", "--repeat-penalty", "1.0"
+  ]
+}

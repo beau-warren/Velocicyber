@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Velocicyber</title>
+  <desc id="desc">A bold neon green V with a neon pink diagonal shadow to its right on black.</desc>
+  <rect width="512" height="512" fill="#000000"/>
+  <polygon points="260,416 336,416 454,96 378,96" fill="#ff39c8"/>
+  <polygon points="92,96 168,96 252,324 336,96 412,96 294,416 210,416" fill="#39ff14"/>
+</svg>

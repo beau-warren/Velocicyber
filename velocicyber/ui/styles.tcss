@@ -1,0 +1,49 @@
+Screen { background: #000000; color: #e3ffe7; }
+Menu { background: transparent; }
+* { scrollbar-color: #ff39c8; scrollbar-color-hover: #39ff14;
+    scrollbar-color-active: #39ff14; scrollbar-background: #000000;
+    scrollbar-background-hover: #000000; scrollbar-background-active: #000000; }
+#masthead { layout: horizontal; height: auto; padding: 0 2; align: center top; }
+.conversation #masthead { height: 9; align: left top; }
+#title { width: 1fr; height: 5; color: #39ff14;
+    text-wrap: nowrap; text-overflow: clip; }
+.conversation #title { margin-right: 2; }
+#status-panel { display: none; width: 53; height: 9; }
+.conversation #status-panel { display: block; }
+#update-status, #home-update-status { height: 1; width: 100%; background: #000000;
+    text-align: right; text-wrap: nowrap; text-overflow: ellipsis; }
+#home-update-status { position: absolute; overlay: screen; width: auto; }
+.conversation #home-update-status { display: none; }
+#dashboard { width: 100%; height: auto; background: #000000;
+    text-wrap: nowrap; text-overflow: ellipsis; }
+#content { height: 1fr; layers: transcript home; }
+#main-menu { layer: home; position: absolute; width: 100vw; height: 100%;
+    padding: 0 2; background: #000000; align: center top; }
+#home-copy { height: auto; max-width: 100%; }
+#status-guide { height: auto; margin-top: 1; text-align: left; }
+#home-actions { height: auto; margin-top: 1; text-align: center; }
+.conversation #main-menu { display: none; }
+#log { layer: transcript; height: 1fr; min-height: 1; margin: 0 2; padding: 0 1;
+    border: round #39ff14; border-title-align: left; background: #000000; }
+#live-response { display: none; height: 6; margin: 0 2; padding: 0 1;
+    border: round #00cfff; background: #000000; }
+#activity { display: none; height: 1; margin: 0 2; color: #00cfff; }
+.conversation #activity { display: block; }
+#prompt-queue { display: none; height: 2; margin: 0 2; }
+#home-notice { display: none; height: auto; max-height: 3; margin: 0 2; color: #00cfff; }
+#home-notice.has-message { display: block; }
+.conversation #home-notice.has-message { display: none; }
+#commands { display: none; overlay: screen; height: 9; margin: 0 2;
+    border: round #ff39c8; background: #000000; color: #39ff14; }
+#commands > .option-list--option-highlighted { background: #241020; color: #ff39c8; }
+#commands > .option-list--option-hover { background: #102418; }
+#menu-options { height: auto; max-height: 10; border: round #ff39c8;
+    background: #000000; color: #39ff14; }
+#menu-options > .option-list--option-highlighted { background: #241020; color: #ff39c8; }
+#menu-options > .option-list--option-hover { background: #102418; }
+#menu-filter { height: 3; margin: 0; background: #000000; border: tall #ff39c8; }
+#menu-filter:focus { background-tint: transparent; border: tall #ff39c8; }
+#prompt { margin: 0 2 1 2; background: #000000; border: tall #39ff14; }
+#prompt:focus { border: tall #ff39c8; background-tint: transparent; }
+Footer { background: #000000; color: #39ff14; }
+FooterKey > .footer-key--key { background: #000000; color: #ff39c8; }
