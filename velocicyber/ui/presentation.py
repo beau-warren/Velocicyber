@@ -79,7 +79,7 @@ def compact_title_art(*, padded=True):
 
 def status_guide():
     rows = (
-        ("Updates", "Whether the execution engine is up to date."),
+        ("Updates", "Whether the harness and engine are up to date."),
         ("Private model", "Selected GPU or Raspberry Pi model."),
         ("GPUs", "Lambda GPU instance status."),
         ("API", "Selected API model and request health."),

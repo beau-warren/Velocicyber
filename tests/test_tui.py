@@ -1382,3 +1382,33 @@ async def test_response_preview_completion_resets_for_followup(settings, monkeyp
         assert transcript.count(answer) == 2
         assert "Partial response:\nHello again." in transcript
         assert app.task_failed
+
+
+@pytest.mark.parametrize("components", [{"engine"}, {"harness"}, {"engine", "harness"}])
+async def test_update_menu_confirms_exact_available_components(settings, monkeypatch, components):
+    from velocicyber.updates import UpdateChecker
+
+    async def no_check(self):
+        pass
+
+    monkeypatch.setattr(UpdateChecker, "check", no_check)
+    app = VelocicyberApp(settings)
+    plan = {key: {"target": "b" * 40 if key == "harness" else "rust-v0.0.59"}
+            for key in components}
+    monkeypatch.setattr(app.updates, "plan", lambda: plan)
+    exits = []
+    monkeypatch.setattr(app, "action_quit", lambda: exits.append(True))
+    async with app.run_test() as pilot:
+        await app.workers.wait_for_complete()
+        app.command("update")
+        await pilot.pause()
+        await choose(pilot, 1)
+        assert not exits and not app.maintenance_action
+        await choose(pilot, 0)
+        assert not exits
+        app.command("update")
+        await pilot.pause()
+        await choose(pilot, 1)
+        await choose(pilot, 1)
+        assert exits == [True]
+        assert app.maintenance_action == "components" and app.maintenance_plan == plan

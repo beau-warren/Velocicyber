@@ -89,7 +89,7 @@ Repeat setup or check the installation:
 ./velocicyber.sh --demo
 ```
 
-`doctor` and the UI demo make no provider requests. Setup never launches GPUs. Normal UI startup checks the upstream engine release status; an update still requires manual approval. Headless launches skip interactive setup; use the example files below first.
+`doctor` and the UI demo make no provider requests. Setup never launches GPUs. Normal UI startup checks both harness source and upstream engine versions once; updates still require manual approval. Headless launches skip interactive setup; use the example files below first.
 
 <a name="desktop-shortcut"></a>
 
@@ -124,3 +124,55 @@ chmod 600 .env Modules.txt
 Edit the copies with your own credentials and dataset IDs. Never commit them. Unset options fall back to `Modules.example.txt`; there is no maintainer dataset or selected GPU model by default. Environment variables can override API credentials.
 
 See [Model setup](models.md) for Lambda SSH configuration and optional Pi downloads.
+
+
+<a name="updates-and-rollback"></a>
+
+## ![Updates and rollback](../assets/docs/headings/h2-updates-and-rollback.svg)
+
+The top-right indicator checks Velocicyber's official GitHub `main` branch and
+stable Open Interpreter engine releases once per launch. **UPDATE AVAILABLE**
+means one or both have an update; `/updates-info` lists each installed and latest
+version, errors, and the engine's published security advisories. A failed check
+never means that component is up to date. No periodic checks or automatic installs
+run while you work.
+
+Open `/update` and choose **Update**. The menu selects the harness, engine, or
+both according to the check result, shows the targets and asks for confirmation.
+Proceeding closes the session, stops Pi inference and terminates its managed GPU.
+Engine updates keep their existing compatibility gate and conversation backup.
+Harness updates stage the exact source revision and run its offline test suite
+before changing the active files. Changed Python dependencies are built and tested
+in a separate environment. When both need an update, the engine is updated first,
+then the candidate harness is tested against it. Components have separate rollback
+points; if the second fails, the first successful update remains installed.
+
+For terminal use, close the harness first:
+
+```bash
+./velocicyber.sh update
+./velocicyber.sh update --harness-only
+./velocicyber.sh update --stage-only
+./velocicyber.sh update --rollback-harness
+./velocicyber.sh update-engine --rollback
+```
+
+Every command asks for explicit approval. `--stage-only` tests without activation.
+The existing `update-engine` command and menu alias remain available for engine-only
+maintenance. Restart the harness after updating. Existing copies that predate
+repo-update support need a one-time Git pull before this feature can detect later
+source updates.
+
+Git installations must use the official origin and a clean `main` branch; local
+source changes and untracked conflicts block activation. Curl installations use
+their `.runtime/source-install.json` receipt and check source hashes before
+replacement. Modified source and forks require manual reconciliation. Credentials,
+`Modules.txt`, SSH keys, models, workspaces, datasets and conversations are preserved.
+Source/environment backups and validation logs remain under
+`.runtime/harness-updates/`. If an update was interrupted during activation, use
+`update --rollback-harness` to recover before starting a session.
+
+While this repository is private, add `GITHUB_API` to the installation's local
+`.env`, using a GitHub token with **Contents: read** access. It is used only for
+repository requests and is not passed to the model or saved in Git remotes. Keep
+`.env` at `0600`. Once the repository is public, the token is optional.

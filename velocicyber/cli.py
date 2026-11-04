@@ -30,6 +30,11 @@ def main():
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("doctor", help="Check local setup without contacting providers")
     sub.add_parser("setup", help="Configure credentials, datasets and optional local downloads")
+    maintenance = sub.add_parser("update", help="Check and manually update the harness, engine, or both")
+    maintenance.add_argument("--harness-only", action="store_true", help="Update only Velocicyber source")
+    modes = maintenance.add_mutually_exclusive_group()
+    modes.add_argument("--stage-only", action="store_true", help="Test available updates without activating")
+    modes.add_argument("--rollback-harness", action="store_true", help="Restore the previous harness update")
     update = sub.add_parser(
         "update-engine", help="Manually approve, test and install an engine update"
     )
@@ -66,6 +71,11 @@ def main():
         if args.command == "setup":
             return
     settings = Settings.load(args.root)
+    from velocicyber.updates.updater import PENDING
+    if (settings.runtime / PENDING).exists() and not (
+        args.command == "update" and args.rollback_harness
+    ):
+        parser.exit(1, "Interrupted harness update. Run ./velocicyber.sh update --rollback-harness first.\n")
     lease = ExitStack()
     try:
         if args.command in (None, "run"):
@@ -89,6 +99,13 @@ def main():
                     "configured" if settings.options.get(key) else "needed before GPU launch",
                 )
             print("No provider requests made.")
+        elif args.command == "update":
+            from velocicyber.updates.manager import interactive_updates
+
+            if args.demo:
+                raise ValueError("Updates are disabled in demo mode.")
+            interactive_updates(settings, harness_only=args.harness_only,
+                                stage_only=args.stage_only, rollback_harness=args.rollback_harness)
         elif args.command == "update-engine":
             from velocicyber.engine.updater import interactive_update
 
@@ -165,7 +182,14 @@ def main():
                 from velocicyber.engine.updater import interactive_update
 
                 try:
-                    interactive_update(settings, action=app.maintenance_action, approved=True)
+                    if app.maintenance_action == "components":
+                        from velocicyber.updates.manager import interactive_updates
+                        interactive_updates(settings, plan=app.maintenance_plan, approved=True)
+                    elif app.maintenance_action == "harness-rollback":
+                        from velocicyber.updates.manager import interactive_updates
+                        interactive_updates(settings, rollback_harness=True, approved=True)
+                    else:
+                        interactive_update(settings, action=app.maintenance_action, approved=True)
                 except RuntimeError as exc:
                     print(str(exc), file=sys.stderr, flush=True)
                     raise

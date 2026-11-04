@@ -177,7 +177,7 @@ async def test_dashboard_check_is_nonblocking_and_does_not_consume_log_space(
     started, finish = asyncio.Event(), asyncio.Event()
     checks = []
 
-    async def check(self):
+    async def check(self, **kwargs):
         checks.append(self)
         started.set()
         await finish.wait()
@@ -186,6 +186,8 @@ async def test_dashboard_check_is_nonblocking_and_does_not_consume_log_space(
         }
 
     monkeypatch.setattr(UpdateChecker, "check", check)
+    from velocicyber.updates.source import SourceChecker
+    monkeypatch.setattr(SourceChecker, "indicator", lambda _: ("UP TO DATE", "#39ff14"))
     app = VelocicyberApp(update_settings)
     async with app.run_test(size=(80, 24)) as pilot:
         await asyncio.wait_for(started.wait(), 2)
@@ -220,14 +222,14 @@ async def test_dashboard_check_is_nonblocking_and_does_not_consume_log_space(
         await pilot.press("enter")
         text = "\n".join(line.text for line in app.query_one("#log", RichLog).lines)
         assert "rust-v0.0.46" in text
-        app.updates.result["latest"] = "rust-v0.0.45"
+        app.updates.engine.result["latest"] = "rust-v0.0.45"
         app.animate()
         assert "UP TO DATE" in str(badge.render())
         app.command("home")
         await pilot.pause()
         assert home_badge.display and "UP TO DATE" in str(home_badge.render())
         assert home_badge.region.y == 0 and home_badge.region.right == app.size.width - 2
-        app.updates.result["error"] = "Fixture: release check failed"
+        app.updates.engine.result["error"] = "Fixture: release check failed"
         app.animate()
         await pilot.pause()
         assert "UPDATE CHECK FAILED" in str(home_badge.render())

@@ -18,7 +18,6 @@ from velocicyber.config import API_MODELS, PI_MODEL_NOTICE
 from velocicyber.datasets.pipeline import dataset_summary, delete_local_finetuning_data
 from velocicyber.datasets.upload import Uploader
 from velocicyber.engine.installation import take_update_notice
-from velocicyber.engine.releases import UpdateChecker
 from velocicyber.engine.runner import Engine
 from velocicyber.models.gpu_profiles import GPU_PROFILES
 from velocicyber.models.startup import model_details, model_option_label
@@ -45,6 +44,8 @@ from velocicyber.ui.presentation import (
 )
 from velocicyber.ui.transcript import TranscriptLog
 from velocicyber.ui.widgets import Menu, Prompt
+from velocicyber.updates import UpdateChecker
+from velocicyber.updates.manager import describe
 
 
 class VelocicyberApp(App):
@@ -73,6 +74,7 @@ class VelocicyberApp(App):
         self.updates = UpdateChecker(settings)
         self.update_check_running = False
         self.maintenance_action = ""
+        self.maintenance_plan = {}
         self.compacting = False
         self.demo, self.frame, self.busy = demo, 0, False
         self.gpu_busy = False
@@ -220,9 +222,49 @@ class VelocicyberApp(App):
         home_badge = self.query_one("#home-update-status", Static)
         for badge in (self.query_one("#update-status", Static), home_badge):
             badge.update(Text(label, style=f"bold {color}", justify="right", no_wrap=True))
-            badge.tooltip = "Open /updates-info for engine versions and security advisories."
+            badge.tooltip = "Open /updates-info for harness and engine versions; /update to install."
         home_badge.styles.width = min(len(label), max(1, self.size.width - 4))
         home_badge.styles.offset = (max(2, self.size.width - len(label) - 2), 0)
+
+    def update_menu(self):
+        if self.demo:
+            self.say("DEMO: updates are disabled.")
+            return
+        if self.busy or self.gpu_busy or self.pi_busy or self.data_busy or self.sentinel_busy:
+            self.say("Finish the current task or resource operation before updating.")
+            return
+        if self.update_check_running:
+            self.say("The launch-time update check is still running. Open /update when it finishes.")
+            return
+        plan = self.updates.plan()
+        choices = [(None, "Cancel")]
+        if plan:
+            choices.append(("components", "Update " + describe(plan) + " — test, back up, then activate"))
+        choices.extend([("engine-tools", "Engine test / rollback options"),
+                        ("harness-rollback", "Roll back the last Velocicyber update")])
+        summary = "\n".join(component + ": " + item["target"][:18] for component, item in plan.items())
+        self.push_screen(Menu("Updates" + ("\n" + summary if plan else " — no verified updates available; see /updates-info"), choices),
+                         lambda action: self.confirm_updates(action, plan))
+
+    def confirm_updates(self, action, plan):
+        if action == "engine-tools":
+            self.engine_update_menu()
+            return
+        if action not in {"components", "harness-rollback"}:
+            return
+        description = ("Update " + describe(plan) + ". Test before activation; retain rollback backups."
+                       if action == "components" else "Restore the previous Velocicyber source and Python environment.")
+        self.push_screen(Menu(description + "\nThis closes the harness, stops the Pi model and terminates its GPU.\nProceed?",
+                              [(False, "Cancel"), (True, "Yes — proceed")]),
+                         lambda approved: self.begin_updates(action, plan) if approved else None)
+
+    def begin_updates(self, action, plan):
+        if self.demo or self.busy or self.gpu_busy or self.pi_busy or self.data_busy or self.sentinel_busy:
+            self.say("Finish the current operation before updating.")
+            return
+        self.maintenance_plan = plan
+        self.maintenance_action = action
+        self.action_quit()
 
     def engine_update_menu(self):
         if self.demo:
@@ -1400,8 +1442,8 @@ class VelocicyberApp(App):
                 "/sentinel scope observer ON/OFF · "
                 "/data-collection collection, manual upload and Advanced task/verification settings · "
                 "/queue view, pause, resume or clear queued prompts · "
-                "/updates-info engine releases · "
-                "/update-engine manual update/rollback · /quit\n"
+                "/updates-info harness/engine versions · "
+                "/update manual update/rollback · /quit\n"
                 "Drag session text to select · Ctrl+C copies · Ctrl+A selects the focused log.\n"
                 "If clipboard access is blocked, Shift-drag and use your terminal's Copy command."
             )
@@ -1412,7 +1454,9 @@ class VelocicyberApp(App):
                 else self.updates.details()
             )
             if not self.demo:
-                self.say("Open /update-engine to choose a manually approved update or rollback.")
+                self.say("Open /update to install the available harness/engine updates or roll back.")
+        elif name == "update":
+            self.update_menu()
         elif name == "update-engine":
             self.engine_update_menu()
         elif name in ("new", "task"):

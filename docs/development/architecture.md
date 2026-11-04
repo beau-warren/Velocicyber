@@ -80,6 +80,11 @@ Arbitrary repository names are not automatically supported: validate memory, tok
 
 The execution engine is installed separately from an official pinned package. It is not rebuilt or patched in this repository. `./velocicyber.sh update-engine` asks for approval, stages the candidate, runs compatibility checks and activates it only after those checks pass. Rollback is available with `--rollback`.
 
+`velocicyber/updates/` combines the engine checker with source revision checks and
+a manually approved source updater. `/update` chooses the available components;
+source updates stage an archive, validate it, preserve private paths and retain
+a rollback backup. See [update behavior](../installation.md#updates-and-rollback).
+
 ```bash
 .venv/bin/python -m pytest -q
 .venv/bin/ruff check bootstrap.py velocicyber scripts tests --no-cache

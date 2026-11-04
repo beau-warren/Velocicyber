@@ -16,8 +16,8 @@ COMMANDS = CONTROLS + [
     ("new", "Start a new conversation"),
     ("queue", "View, pause, resume or clear queued prompts"),
     ("help", "Show command help"),
-    ("updates-info", "Engine updates and security advisories"),
-    ("update-engine", "Manually update or roll back the execution engine"),
+    ("updates-info", "Harness/engine versions and security advisories"),
+    ("update", "Manually update the harness, engine, or both"),
     ("home", "Return to the main menu"),
     ("quit", "End session and terminate its GPU"),
 ]

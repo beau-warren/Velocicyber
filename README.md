@@ -129,7 +129,7 @@ style. Confirming a model from the home screen starts a new conversation; use
 | `/sandbox` | Select workspace restrictions or open access with your account permissions |
 | `/sentinel` | Select the local observer and turn it ON/OFF |
 | `/data-collection`, `/upload-perms` | Control collection, manual/automatic uploads and data retention |
-| `/updates-info`, `/update-engine` | Inspect engine release/advisory information or approve maintenance |
+| `/updates-info`, `/update` | Inspect harness/engine versions or approve available updates |
 | `/help`, `/quit` | Show help or end the session and terminate its tracked GPU |
 
 Enter queues a prompt while the agent is busy. **Ctrl+X** stops the current task
@@ -173,8 +173,10 @@ predictions are not verified labels. See [data handling](docs/usage.md#data-and-
   installation's live local runtimes at a time because default ports are shared.
 
 The harness uses a separately installed official Open Interpreter engine.
-Engine updates require approval and compatibility checks; the harness source
-itself is updated separately. Inspect `/updates-info` when a release check fails.
+The launch-time indicator checks both Velocicyber source and the engine. `/update`
+selects whichever components have verified updates, asks for approval, and tests
+them before activation. Inspect `/updates-info` when a check fails. See
+[updating and rollback](docs/installation.md#updates-and-rollback).
 See [security boundaries](SECURITY.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
 An original-code distribution license must be chosen before public release.
 

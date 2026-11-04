@@ -347,3 +347,27 @@ Validation: reproduced the duplicate with an offline delayed-callback fixture
 before the fix. All 47 interface tests passed, including seven new cases for
 late full/prefix previews, interruptions and follow-up turns. Ruff passed.
 No live model calls, GPU launches or dataset uploads were needed.
+
+
+<a name="unified-harness-and-engine-updates--2026-11-04"></a>
+
+## ![Unified harness and engine updates — 2026-11-04](../../assets/docs/headings/h2-unified-harness-and-engine-updates--2026-11-04.svg)
+
+- [x] Check official harness `main` and stable engine releases once per launch;
+  one indicator reports an available update for either component or both.
+- [x] Add `/update` with explicit confirmation of exact target revisions and
+  automatic component selection; keep engine-only maintenance available.
+- [x] Stage and test source before activation; preserve credentials, local
+  configuration, SSH keys, models, workspaces, conversations and datasets.
+- [x] Support clean official Git checkouts and receipt-backed curl installs,
+  refusing local edits/conflicts and retaining source/environment rollback.
+- [x] Keep private GitHub credentials out of Git remotes, model environments,
+  cached status and redirected download authorization.
+
+Validation: all 566 offline tests passed with the installed ARM64 engine,
+including Git/archive update and rollback, dependency rollback, dirty trees,
+active-session locking, failed candidate tests, private access failures,
+redirect credential isolation, combined status and explicit menu approval.
+Ruff passed for changed Python files. No paid inference, GPU launches, dataset
+uploads or real engine update were performed. Existing installations need a
+one-time source refresh to gain the updater before discovering subsequent changes.
