@@ -33,9 +33,9 @@ def responses(*values):
     return lambda _: next(answers)
 
 
-def setup(root, answers=(), secrets=("", "", ""), **kwargs):
+def setup(root, answers=(), secrets=("", "", ""), ssh_answers=("",), **kwargs):
     return onboarding.run_setup(
-        root, interactive=True, input_fn=responses(*answers),
+        root, interactive=True, input_fn=responses(*answers, *ssh_answers),
         secret_fn=responses(*secrets), **kwargs,
     )
 

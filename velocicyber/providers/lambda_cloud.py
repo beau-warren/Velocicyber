@@ -329,10 +329,10 @@ class GPUManager:
             )
         for name in ("LAMBDA_SSH_KEY_NAME", "SSH_PRIVATE_KEY"):
             if not self.settings.options.get(name):
-                raise ValueError(f"Set {name} in Modules.txt before requesting a launch plan.")
+                raise ValueError(f"Configure {name} with ./velocicyber.sh setup before requesting a launch plan.")
         key = (self.settings.root / self.settings.options["SSH_PRIVATE_KEY"]).resolve()
         if not key.is_file() or not key.is_relative_to(self.settings.root):
-            raise ValueError("SSH_PRIVATE_KEY must point to a key file inside this project.")
+            raise ValueError("SSH_PRIVATE_KEY must point to a key file inside this project. Run ./velocicyber.sh setup to select or import it.")
         spec = self.inspect_model()
         if spec.required_gib > memory:
             raise ValueError(

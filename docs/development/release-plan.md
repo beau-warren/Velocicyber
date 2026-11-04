@@ -371,3 +371,22 @@ redirect credential isolation, combined status and explicit menu approval.
 Ruff passed for changed Python files. No paid inference, GPU launches, dataset
 uploads or real engine update were performed. Existing installations need a
 one-time source refresh to gain the updater before discovering subsequent changes.
+
+
+<a name="lambda-ssh-setup-prompt--2026-11-04"></a>
+
+## ![Lambda SSH setup prompt — 2026-11-04](../../assets/docs/headings/h2-lambda-ssh-setup-prompt--2026-11-04.svg)
+
+- [x] Prompt for the registered Lambda SSH key name and private key file during
+  setup; support numbered files already in ssh-keys and explicit external import.
+- [x] Keep key contents out of configuration and terminal output, save name/path
+  options in owner-only Modules.txt, and protect selected/imported keys with 0600.
+- [x] Offer existing installations just this new section once after updating;
+  skipping is remembered, and running setup explicitly reopens it.
+- [x] Point GPU preflight messages to setup instead of requiring manual file edits.
+
+Validation: 54 focused onboarding, SSH, desktop and CLI tests passed, including
+fresh setup, one-time migration, external key import, private-file permissions,
+non-key rejection and preservation of existing credentials/dataset settings.
+Ruff passed. No Lambda requests or instance launches were made. This change is
+published after updater support so a test installation can detect it normally.

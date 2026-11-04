@@ -15,6 +15,7 @@ from velocicyber.config import Settings
 from velocicyber.datasets.pipeline import Scrubber
 from velocicyber.desktop import desktop_directory, install_shortcut
 from velocicyber.models.pi_profiles import BUGTRACE_PI_REPO, PI_MODEL_REPO
+from velocicyber.ssh_setup import lambda_ssh_options
 
 CREDENTIALS = (
     ("LAMBDA_API", "Lambda API Key"),
@@ -94,10 +95,24 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
             raise ValueError("Setup requires regular local configuration paths: " + name)
     settings = Settings.load(root)
     marker = settings.runtime / MARKER
-    if marker.is_file() and not force:
-        return False
     if interactive is None:
         interactive = sys.stdin.isatty() and sys.stdout.isatty()
+    if marker.is_file() and not force:
+        try:
+            saved = json.loads(marker.read_text())
+        except (ValueError, OSError):
+            saved = {}
+        if not isinstance(saved, dict):
+            saved = {}
+        if not interactive or saved.get("lambda_ssh_setup") == 1:
+            return False
+        print("Additional setup: Lambda SSH access. Existing provider and dataset settings are kept.")
+        if options := lambda_ssh_options(root, settings.options, input_fn):
+            private_assignments(root / "Modules.txt", options)
+        saved["lambda_ssh_setup"] = 1
+        from velocicyber.engine.sessions import private_write
+        private_write(marker, json.dumps(saved) + "\n")
+        return True
     if not interactive:
         if force:
             raise ValueError("Run setup in a terminal, or copy .env.example and Modules.example.txt manually.")
@@ -194,7 +209,11 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
                 print("Continue normally; run ./velocicyber.sh setup to retry later.")
     else:
         print("Desktop shortcut skipped: no Linux desktop folder was found.")
-    payload = {"schema": 1, "completed_at": datetime.now(timezone.utc).isoformat()}
+    settings = Settings.load(root)
+    if options := lambda_ssh_options(root, settings.options, input_fn):
+        private_assignments(root / "Modules.txt", options)
+    payload = {"schema": 1, "completed_at": datetime.now(timezone.utc).isoformat(),
+               "lambda_ssh_setup": 1}
     descriptor, temporary = tempfile.mkstemp(prefix="setup-", dir=settings.runtime)
     try:
         with os.fdopen(descriptor, "w") as stream:

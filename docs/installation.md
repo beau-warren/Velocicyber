@@ -78,8 +78,9 @@ The first launch runs setup before opening the main menu. Every optional item ca
 6. Optional, explicitly confirmed creation of missing Hugging Face datasets as **private**. Existing datasets retain their visibility. This step uploads no training records.
 7. Optional execution engine/API client installation and optional Pi model downloads.
 8. Optional desktop launcher with the bundled neon V icon, when a Linux desktop folder is available. Enter skips it.
+9. Optional Lambda SSH setup: registered key name and private key file. Select a file from `ssh-keys` or enter a path; external keys are copied into this installation with `0600` permissions. No instance is launched.
 
-Credentials are saved to `.env`; dataset destinations are saved to `Modules.txt`. Setup writes these files with owner-only permissions (`0600`). Both files are excluded from Git. Configuration is parsed as data, never sourced as shell code.
+Credentials are saved to `.env`; dataset destinations and SSH name/path settings are saved to `Modules.txt`. Private-key contents stay in the key file. Setup writes these files with owner-only permissions (`0600`). Both files are excluded from Git. Configuration is parsed as data, never sourced as shell code.
 
 Repeat setup or check the installation:
 
@@ -88,6 +89,8 @@ Repeat setup or check the installation:
 ./velocicyber.sh doctor
 ./velocicyber.sh --demo
 ```
+
+Existing installations are offered the new SSH section once on their next interactive launch after updating, even if first-run setup was already completed. Enter skips it; `./velocicyber.sh setup` reopens it later.
 
 `doctor` and the UI demo make no provider requests. Setup never launches GPUs. Normal UI startup checks both harness source and upstream engine versions once; updates still require manual approval. Headless launches skip interactive setup; use the example files below first.
 

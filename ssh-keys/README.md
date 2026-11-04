@@ -2,7 +2,13 @@
 
 # ![Lambda SSH key](../assets/docs/headings/h1-lambda-ssh-key.svg)
 
-Place your own private key in this directory and register its matching public key
+Run `./velocicyber.sh setup` to enter the registered Lambda SSH key name and
+select a private key. You can choose a numbered file from this directory or enter
+a path. A key outside the installation is copied here with owner-only permissions;
+its contents are never stored in `Modules.txt` or printed. Enter skips this section.
+The matching public key must already be registered with Lambda.
+
+For manual configuration, place your own private key in this directory and register its matching public key
 with your Lambda account. For a key named `lambda.pem`, run from the repository root:
 
 ```bash
