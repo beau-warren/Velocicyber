@@ -416,3 +416,25 @@ Existing Pi model weights were verified against their pinned SHA-256 hashes for
 reuse by a separate consumer install, with independent runtimes and installation
 receipts. No live inference, GPU launches, engine upgrades or dataset uploads
 were performed; the prototype's source and configuration were preserved.
+
+<a name="secure-setup-from-the-command-menu--2026-11-05"></a>
+
+## ![Secure setup from the command menu — 2026-11-05](../../assets/docs/headings/h2-secure-setup-from-the-command-menu--2026-11-05.svg)
+
+- [x] Add filterable `/setup` to reopen skipped credential, dataset, SSH,
+  desktop-launcher and optional-install steps using the existing setup wizard.
+- [x] Require confirmation before ending the session and terminating its GPU;
+  finish UI/model teardown before hidden prompts. Retain saved conversations.
+- [x] Exclude concurrent harness sessions during setup, reject command-line
+  credential arguments, and retain hidden-input refusal and owner-only writes.
+- [x] Reload configuration and return to the main menu, including after an
+  interrupted wizard. Reuse completed version checks when the engine is unchanged.
+- [x] Review all four READMEs and update only the main and SSH setup sections;
+  scope and chat-template documentation remains accurate without changes.
+
+Validation: 142 focused CLI, interface, setup, SSH, desktop and startup-update
+checks passed. A further 81 CLI/maintenance checks passed, including actual
+headless UI teardown and reopening, exclusive setup locking, interruptions and
+update/rollback regressions. Ruff passed. All credentials, desktop shortcuts and
+configuration writes in tests used temporary fixtures. No live inference, GPU
+launches, provider credential probes or dataset uploads were performed.

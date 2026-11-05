@@ -1442,3 +1442,56 @@ async def test_automatic_source_update_menu_requires_one_opt_in_and_can_disable(
         await choose(pilot, 3)
         assert not automatic_updates(settings)
         assert not app.maintenance_action
+
+
+async def test_setup_is_filterable_and_requires_confirmation_before_shutdown(settings, monkeypatch):
+    from velocicyber.updates import UpdateChecker
+
+    async def no_check(self):
+        pass
+
+    monkeypatch.setattr(UpdateChecker, "check", no_check)
+    app = VelocicyberApp(settings)
+    shutdown = []
+    monkeypatch.setattr(app, "terminate_during_startup", lambda: shutdown.append("terminate"))
+    async with app.run_test() as pilot:
+        await app.workers.wait_for_complete()
+        await pilot.press("backslash", *"setup", "enter")
+        assert app.screen.id == "setup-confirm"
+        assert "terminates its GPU" in app.screen.heading
+        assert "hidden terminal prompts" in app.screen.heading
+        assert not app.maintenance_action and not shutdown
+        await choose(pilot, 0)
+        assert not app.maintenance_action and not shutdown
+        app.state.instance_id = "fixture-running-instance"
+        app.command("setup")
+        await pilot.pause()
+        await choose(pilot, 1)
+        assert app.maintenance_action == "setup"
+        assert app.exit_after_termination and shutdown == ["terminate"]
+        assert not (settings.root / ".env").exists()
+
+
+@pytest.mark.parametrize("blocked", ["demo", "busy", "gpu_busy", "pi_busy", "data_busy", "sentinel_busy", "session_ending"])
+async def test_setup_cannot_start_during_operations_or_demo(settings, monkeypatch, blocked):
+    app = VelocicyberApp(settings, demo=True)
+    monkeypatch.setattr(app, "action_quit", lambda: pytest.fail("Unexpected setup shutdown"))
+    async with app.run_test() as pilot:
+        app.demo = blocked == "demo"
+        setattr(app, blocked, True)
+        app.setup_menu()
+        await pilot.pause()
+        assert not isinstance(app.screen, Menu)
+        # Check again at confirmation time to cover a task starting after opening the menu.
+        app.begin_setup()
+        assert not app.maintenance_action
+        setattr(app, blocked, False)
+
+
+async def test_setup_never_echoes_credentials_passed_as_command_arguments(settings):
+    app = VelocicyberApp(settings, demo=True)
+    async with app.run_test():
+        app.command("setup accidental-private-token")
+        transcript = app.query_one("#log")._copy_text
+        assert "hidden prompts" in transcript and "accidental-private-token" not in transcript
+        assert not isinstance(app.screen, Menu)

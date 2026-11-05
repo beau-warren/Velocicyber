@@ -15,6 +15,23 @@ from velocicyber.sentinel.data import SentinelStore
 from velocicyber.state import State
 
 
+def run_menu_setup(settings):
+    """Run hidden terminal prompts after all model clients and UI input have closed."""
+    from velocicyber.onboarding import run_setup
+
+    try:
+        with engine_lease(settings.runtime, maintenance=True):
+            run_setup(settings.root, force=True)
+    except (EOFError, KeyboardInterrupt):
+        print("\nSetup interrupted. Fields already saved were kept; use /setup to continue.", flush=True)
+    except (OSError, ValueError, RuntimeError) as exc:
+        print("Setup could not finish: " + str(exc), file=sys.stderr, flush=True)
+    try:
+        input("Press Enter to return to Velocicyber…")
+    except (EOFError, KeyboardInterrupt):
+        pass
+
+
 def main():
     parser = argparse.ArgumentParser(description="Velocicyber — modular coding harness")
     parser.add_argument("--version", action="version", version="Velocicyber " + __version__)
@@ -179,38 +196,52 @@ def main():
         else:
             from velocicyber.ui.app import VelocicyberApp
 
-            app = VelocicyberApp(
-                settings,
-                demo=args.demo,
-                workspace=args.workspace,
-                sandbox_open=args.sandbox == "open",
-            )
-            if startup_checker is not None:
-                startup_checker.settings = settings
-                app.updates.source = startup_checker
-                app.startup_update_message = startup_checker.startup_notice
-            app.run()
-            lease.close()  # The UI and its model sessions have now shut down.
-            if app.maintenance_action:
-                from velocicyber.engine.updater import interactive_update
+            previous_engine_check = None
+            while True:
+                app = VelocicyberApp(
+                    settings,
+                    demo=args.demo,
+                    workspace=args.workspace,
+                    sandbox_open=args.sandbox == "open",
+                )
+                if startup_checker is not None:
+                    startup_checker.settings = settings
+                    app.updates.source = startup_checker
+                    app.startup_update_message = startup_checker.startup_notice
+                if previous_engine_check is not None and app.updates.engine.identity == previous_engine_check.identity:
+                    previous_engine_check.settings = settings
+                    app.updates.engine = previous_engine_check
+                app.run()
+                lease.close()  # The UI and its model sessions have now shut down.
+                if app.maintenance_action == "setup":
+                    run_menu_setup(settings)
+                    settings = Settings.load(args.root)
+                    startup_checker = app.updates.source
+                    startup_checker.startup_notice = ""
+                    previous_engine_check = app.updates.engine
+                    lease.enter_context(engine_lease(settings.runtime))
+                    continue
+                if app.maintenance_action:
+                    from velocicyber.engine.updater import interactive_update
 
-                try:
-                    if app.maintenance_action == "components":
-                        from velocicyber.updates.manager import interactive_updates
-                        interactive_updates(settings, plan=app.maintenance_plan, approved=True)
-                    elif app.maintenance_action == "harness-rollback":
-                        from velocicyber.updates.manager import interactive_updates
-                        interactive_updates(settings, rollback_harness=True, approved=True)
-                    else:
-                        interactive_update(settings, action=app.maintenance_action, approved=True)
-                except RuntimeError as exc:
-                    print(str(exc), file=sys.stderr, flush=True)
-                    raise
-                finally:
                     try:
-                        input("Press Enter to close this window…")
-                    except EOFError:
-                        pass
+                        if app.maintenance_action == "components":
+                            from velocicyber.updates.manager import interactive_updates
+                            interactive_updates(settings, plan=app.maintenance_plan, approved=True)
+                        elif app.maintenance_action == "harness-rollback":
+                            from velocicyber.updates.manager import interactive_updates
+                            interactive_updates(settings, rollback_harness=True, approved=True)
+                        else:
+                            interactive_update(settings, action=app.maintenance_action, approved=True)
+                    except RuntimeError as exc:
+                        print(str(exc), file=sys.stderr, flush=True)
+                        raise
+                    finally:
+                        try:
+                            input("Press Enter to close this window…")
+                        except EOFError:
+                            pass
+                break
     except (ValueError, RuntimeError, PermissionError) as exc:
         parser.exit(1, str(exc) + "\n")
     finally:

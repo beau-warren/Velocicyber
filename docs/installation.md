@@ -82,7 +82,18 @@ The first launch runs setup before opening the main menu. Every optional item ca
 
 Credentials are saved to `.env`; dataset destinations and SSH name/path settings are saved to `Modules.txt`. Private-key contents stay in the key file. Setup writes these files with owner-only permissions (`0600`). Both files are excluded from Git. Configuration is parsed as data, never sourced as shell code.
 
-Repeat setup or check the installation:
+Use `/setup` in the slash/backslash menu to revisit skipped items. It asks before
+ending the session, stopping local models and terminating its tracked GPU, then
+opens hidden terminal prompts outside the chat. Saved conversations remain
+available through `/resume`. Enter keeps existing values or skips missing ones.
+Setup returns to the main menu with the saved settings loaded. Other harness
+windows must be closed while configuring it; demo mode cannot change settings.
+
+Credentials are never accepted as `/setup` arguments. If hidden terminal input is
+unavailable, credential entry stops rather than echoing the secret. No credentials
+are added to chat transcripts or collected training records by this flow.
+
+Or repeat setup/check the installation from a terminal:
 
 ```bash
 ./velocicyber.sh setup
@@ -100,7 +111,7 @@ Existing installations are offered the new SSH section once on their next intera
 
 On the first interactive launch, setup offers **Create a desktop launcher and
 Velocicyber icon?** Choose `y` to add it, or press Enter to skip. To add it later,
-run `./velocicyber.sh setup`; existing settings can be kept with Enter.
+use `/setup` or run `./velocicyber.sh setup`; existing settings can be kept with Enter.
 
 The shortcut uses the bundled neon-green V with its pink shadow and opens the
 harness in your desktop's default terminal. Setup respects the configured Linux

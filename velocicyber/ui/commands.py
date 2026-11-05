@@ -16,6 +16,7 @@ COMMANDS = CONTROLS + [
     ("new", "Start a new conversation"),
     ("queue", "View, pause, resume or clear queued prompts"),
     ("help", "Show command help"),
+    ("setup", "Secure setup — credentials, datasets, SSH and desktop launcher"),
     ("updates-info", "Harness/engine versions and security advisories"),
     ("update", "Manually update the harness, engine, or both"),
     ("home", "Return to the main menu"),

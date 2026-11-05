@@ -2,7 +2,7 @@
 
 # ![Lambda SSH key](../assets/docs/headings/h1-lambda-ssh-key.svg)
 
-Run `./velocicyber.sh setup` to enter the registered Lambda SSH key name and
+Use `/setup` in the harness or run `./velocicyber.sh setup` to enter the registered Lambda SSH key name and
 select a private key. You can choose a numbered file from this directory or enter
 a path. A key outside the installation is copied here with owner-only permissions;
 its contents are never stored in `Modules.txt` or printed. Enter skips this section.

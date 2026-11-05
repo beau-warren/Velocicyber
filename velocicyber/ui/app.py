@@ -229,6 +229,28 @@ class VelocicyberApp(App):
         home_badge.styles.width = min(len(label), max(1, self.size.width - 4))
         home_badge.styles.offset = (max(2, self.size.width - len(label) - 2), 0)
 
+    def setup_menu(self):
+        if self.demo:
+            self.say("DEMO: setup is disabled. Open the normal harness to configure it.")
+            return
+        if self.busy or self.gpu_busy or self.pi_busy or self.data_busy or self.sentinel_busy or self.session_ending:
+            self.say("Finish the current task or resource operation before opening setup.")
+            return
+        self.push_screen(Menu(
+            "Secure setup — credentials, datasets, SSH, desktop launcher and optional installs.\n"
+            "This ends the session, stops local models and terminates its GPU.\n"
+            "Saved conversations remain available through /resume.\n"
+            "Credentials use hidden terminal prompts outside the chat. Open setup?",
+            [(False, "Cancel — keep coding"), (True, "Open secure setup")], id="setup-confirm"),
+            lambda approved: self.begin_setup() if approved else None)
+
+    def begin_setup(self):
+        if self.demo or self.busy or self.gpu_busy or self.pi_busy or self.data_busy or self.sentinel_busy or self.session_ending:
+            self.say("Finish the current task or resource operation before opening setup.")
+            return
+        self.maintenance_action = "setup"
+        self.action_quit()
+
     def update_menu(self):
         if self.demo:
             self.say("DEMO: updates are disabled.")
@@ -1470,7 +1492,7 @@ class VelocicyberApp(App):
                 "/data-collection collection, manual upload and Advanced task/verification settings · "
                 "/queue view, pause, resume or clear queued prompts · "
                 "/updates-info harness/engine versions · "
-                "/update manual update/rollback · /quit\n"
+                "/update manual update/rollback · /setup secure configuration · /quit\n"
                 "Drag session text to select · Ctrl+C copies · Ctrl+A selects the focused log.\n"
                 "If clipboard access is blocked, Shift-drag and use your terminal's Copy command."
             )
@@ -1482,6 +1504,11 @@ class VelocicyberApp(App):
             )
             if not self.demo:
                 self.say("Open /update to install the available harness/engine updates or roll back.")
+        elif name == "setup":
+            if rest.strip():
+                self.say("Use /setup without arguments. Enter credentials only in its hidden prompts.")
+            else:
+                self.setup_menu()
         elif name == "update":
             self.update_menu()
         elif name == "update-engine":

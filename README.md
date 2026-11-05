@@ -110,7 +110,7 @@ To inspect setup or try the interface without provider requests:
 ./velocicyber.sh --demo
 ```
 
-Run `./velocicyber.sh setup` to revisit credentials and optional installations.
+Revisit skipped setup with `/setup` (or `./velocicyber.sh setup` in a terminal). It uses hidden credential prompts; [setup details](docs/installation.md#first-run-setup) cover saved settings and session shutdown.
 
 <a name="using-the-harness"></a>
 
@@ -129,6 +129,7 @@ style. Confirming a model from the home screen starts a new conversation; use
 | `/sandbox` | Select workspace restrictions or open access with your account permissions |
 | `/sentinel` | Select the local observer and turn it ON/OFF |
 | `/data-collection`, `/upload-perms` | Control collection, manual/automatic uploads and data retention |
+| `/setup` | Revisit skipped setup with hidden credential prompts |
 | `/updates-info`, `/update` | Inspect versions, approve updates, or toggle automatic repo updates on launch |
 | `/help`, `/quit` | Show help or end the session and terminate its tracked GPU |
 
