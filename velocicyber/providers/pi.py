@@ -60,10 +60,15 @@ class PiModelManager:
         if (
             not model.is_file()
             or not binary.is_file()
-            or model.stat().st_size != cfg["weight_bytes"]
+            or model.stat().st_size != (saved.get("converted_weight_bytes") if cfg.get("conversion") else cfg["weight_bytes"])
             or model.stat().st_mtime_ns != saved["model_mtime_ns"]
         ):
             return None
+        if cfg.get("conversion"):
+            from velocicyber.models.pi_artifacts import valid_receipt
+
+            if not valid_receipt(cfg, self.folder, saved, verify_model=False):
+                return None
         return {**saved, **cfg}
 
     async def install(self, notify):
@@ -109,6 +114,8 @@ class PiModelManager:
                 if event.get("stage") == "download_progress":
                     percent = event["bytes"] * 100 // event["total"]
                     self.state.pi_stage = f"Downloading {percent}%"
+                elif event.get("stage") in {"installing_runtime", "preparing_converter", "converting"}:
+                    self.state.pi_stage = event["stage"].replace("_", " ").capitalize()
                 elif event.get("part") == "setup" and event.get("stage") == "ready":
                     notify("Raspberry Pi model download and runtime build complete.")
         result = await self.install_process.wait()
@@ -121,6 +128,16 @@ class PiModelManager:
     def install_status(self):
         if (self.folder / "installed.json").exists():
             return "Downloaded — select to load"
+        build = self.folder / "build.json"
+        if build.exists():
+            try:
+                stage = json.loads(build.read_text()).get("stage")
+                if stage == "failed":
+                    return "Setup stopped — see installation log"
+                if stage in {"preparing_converter", "converting"}:
+                    return stage.replace("_", " ").capitalize()
+            except (OSError, ValueError):
+                pass
         path = self.folder / "download.json"
         if path.exists():
             try:
@@ -182,7 +199,7 @@ class PiModelManager:
                 "128",
                 "--jinja",
                 "--chat-template-kwargs",
-                '{"enable_thinking":false}',
+                json.dumps({"enable_thinking": cfg.get("enable_thinking", False)}),
             ]
             + cfg.get("server_args", [])
             + template_args

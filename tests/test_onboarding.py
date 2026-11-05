@@ -110,6 +110,8 @@ def test_failed_creation_never_prints_key(tmp_path, monkeypatch, capsys):
     ("1", [onboarding.PI_MODEL_REPO]),
     ("2", [onboarding.BUGTRACE_PI_REPO]),
     ("3", [onboarding.PI_MODEL_REPO, onboarding.BUGTRACE_PI_REPO]),
+    ("4", [onboarding.LFM3_PI_REPO]),
+    ("5", [onboarding.PI_MODEL_REPO, onboarding.BUGTRACE_PI_REPO, onboarding.LFM3_PI_REPO]),
 ])
 def test_optional_pi_download_dispatch(tmp_path, monkeypatch, choice, models):
     calls = []
@@ -160,7 +162,7 @@ def test_example_configuration_is_portable_and_local_overrides_win(tmp_path):
     (tmp_path / "Modules.example.txt").write_bytes((root / "Modules.example.txt").read_bytes())
     settings = Settings.load(tmp_path)
     assert len(settings.gpu_model_choices) == 6
-    assert len(settings.pi_model_choices) == 2
+    assert len(settings.pi_model_choices) == 3
     assert not settings.local_model and not settings.dataset_repo
     assert not settings.options["SENTINEL_FINETUNING_REPO"]
     (tmp_path / "Modules.txt").write_text("FINETUNING_REPO=owner/main\nSENTINEL_FINETUNING_REPO=owner/sentinel\n")

@@ -1,0 +1,83 @@
+{
+  "repo": "Blackfrost-AI/LFM3-1.7B-DERISKED",
+  "revision": "1bc5c6c7d977f17b21475c9766ab192ff7effc07",
+  "source_files": [
+    {
+      "filename": "model.safetensors",
+      "weight_bytes": 3457635448,
+      "sha256": "ac2fcf5a3d1494cca445e4050a93f69f7baf901cb6011984533a52372755e52b"
+    },
+    {
+      "filename": "config.json",
+      "weight_bytes": 1454,
+      "sha256": "8c6ae8b8f6d88c87cfb98cf4b5e34e943d0ee07e24215c4121b3159a46e1399d"
+    },
+    {
+      "filename": "generation_config.json",
+      "weight_bytes": 328,
+      "sha256": "0095ba7158e938b1e2d3082d412f00d8be85e42cbbd7608b63866f7a081cf270"
+    },
+    {
+      "filename": "tokenizer.json",
+      "weight_bytes": 17908635,
+      "sha256": "7e226e34bface23ccf6e495d157bf77186c1c30a7659880e1a8994db528c3701"
+    },
+    {
+      "filename": "tokenizer_config.json",
+      "weight_bytes": 1545,
+      "sha256": "bf028f813efc6137bc07ed045cafe71820df9a5e26a38e39954706ed1e30a457"
+    },
+    {
+      "filename": "special_tokens_map.json",
+      "weight_bytes": 92,
+      "sha256": "7946f864cbfb62a1b041bda937244210a1a87f4a6cab3a48b791131b2cd57f88"
+    },
+    {
+      "filename": "chat_template.jinja",
+      "weight_bytes": 12129,
+      "sha256": "f45005c50cd2a97329722bf3a2dee9f16c04cdf825a589b280fb7e99e6827818"
+    },
+    {
+      "filename": "LICENSE",
+      "weight_bytes": 10574,
+      "sha256": "4d28ca14dedc0b3d0fcc2b3339f0e79931faa33874f3d24f522183a8fc70068c"
+    }
+  ],
+  "runtime": {
+    "tag": "b12124",
+    "filename": "llama-b12124-bin-ubuntu-arm64.tar.gz",
+    "bytes": 18753029,
+    "sha256": "004a26f11b5435b06dda96301ecd1a086bb746840d95428f9875a9b30088a073",
+    "url": "https://github.com/ggml-org/llama.cpp/releases/download/b12124/llama-b12124-bin-ubuntu-arm64.tar.gz",
+    "binary": "llama-b12124/llama-server"
+  },
+  "filename": "LFM3-1.7B-DERISKED-Q8_0.gguf",
+  "context_window": 16384,
+  "minimum_available_gib": 4,
+  "enable_thinking": true,
+  "conversion": {
+    "outtype": "q8_0",
+    "architecture": "lfm3",
+    "source": {
+      "revision": "8bed7cfb999cebc03d2cc5b78911026a8d57549a",
+      "url": "https://codeload.github.com/ggml-org/llama.cpp/tar.gz/8bed7cfb999cebc03d2cc5b78911026a8d57549a",
+      "bytes": 39067878,
+      "sha256": "b92a9bd0d645d0986380ccfb980aa5e6836e660af36a26819defa89386db1481"
+    },
+    "minimum_free_gib": 12,
+    "minimum_available_gib": 6,
+    "requirements_sha256": "46938d56d4eaf753f2e58eb87f369b4b9c6f8ebf6d3e4c05dc8041678a25ead6"
+  },
+  "chat_template": {
+    "path": ".runtime/pi-models/lfm3-derisked/chat_template.jinja",
+    "sha256": "f45005c50cd2a97329722bf3a2dee9f16c04cdf825a589b280fb7e99e6827818"
+  },
+  "server_args": [
+    "--temp",
+    "0.1",
+    "--top-k",
+    "50",
+    "--repeat-penalty",
+    "1.1"
+  ]
+}

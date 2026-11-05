@@ -14,7 +14,7 @@ from pathlib import Path
 from velocicyber.config import Settings
 from velocicyber.datasets.pipeline import Scrubber
 from velocicyber.desktop import desktop_directory, install_shortcut
-from velocicyber.models.pi_profiles import BUGTRACE_PI_REPO, PI_MODEL_REPO
+from velocicyber.models.pi_profiles import BUGTRACE_PI_REPO, LFM3_PI_REPO, PI_MODEL_REPO
 from velocicyber.ssh_setup import lambda_ssh_options
 
 CREDENTIALS = (
@@ -180,21 +180,25 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
         if confirm("Install the Adverserial confidential API client? Requires Node.js/npm and network access", input_fn):
             install_component(root, "install_api_gateway.py")
     print("\nOptional Pi 5 models (16 GB RAM, Linux ARM64; one coding model at a time):")
-    print("1: Qwen3.5 IQK — 12.23 GB; 2: BugTrace APEX Mini — 12.26 GB; 3: both.")
-    print("Allow at least 25 GiB free for one install, or about 40 GiB for both plus build space.")
+    print("1: Qwen3.5 IQK — 12.23 GB; 2: BugTrace APEX Mini — 12.26 GB; 3: Qwen + BugTrace.")
+    print("4: Blackfrost LFM3 1.7B — 3.48 GB download, converted locally to ~1.8–2.0 GB Q8; 5: all three.")
+    print("LFM3: allow ~3 GB installed and 12 GiB free during setup; conversion needs 6 GiB available RAM.")
+    print("Qwen/BugTrace: allow 25 GiB free for one, or about 40 GiB for both plus build space.")
     print("Weights are pinned and checksum-verified. Review the publishers' model licenses first.")
     print("https://huggingface.co/" + PI_MODEL_REPO)
     print("https://huggingface.co/" + BUGTRACE_PI_REPO)
+    print("https://huggingface.co/" + LFM3_PI_REPO)
     while True:
-        choice = input_fn("Download/build Pi models now? [1/2/3; Enter to skip for now]: ").strip().lower()
+        choice = input_fn("Download/build Pi models now? [1/2/3/4/5; Enter to skip for now]: ").strip().lower()
         if choice in {"", "0", "skip", "skip for now"}:
             models = ()
             break
-        if choice in {"1", "2", "3"}:
+        if choice in {"1", "2", "3", "4", "5"}:
             models = {"1": (PI_MODEL_REPO,), "2": (BUGTRACE_PI_REPO,),
-                      "3": (PI_MODEL_REPO, BUGTRACE_PI_REPO)}[choice]
+                      "3": (PI_MODEL_REPO, BUGTRACE_PI_REPO), "4": (LFM3_PI_REPO,),
+                      "5": (PI_MODEL_REPO, BUGTRACE_PI_REPO, LFM3_PI_REPO)}[choice]
             break
-        print("Choose 1, 2, 3, or Enter to skip for now.")
+        print("Choose 1–5, or Enter to skip for now.")
     for model in models:
         install_component(root, "install_pi_model.py", "--model", model)
     directory = desktop_directory()

@@ -46,6 +46,20 @@ def main():
             tmp.replace(folder / (part + ".json"))
             print(json.dumps({"part": part, **data}), flush=True)
 
+        if cfg.get("conversion"):
+            from scripts.install.pi_conversion import install_converted
+
+            try:
+                result = install_converted(cfg, folder, progress)
+            except Exception as exc:
+                progress("build", "failed", error=str(exc))
+                raise
+            temporary = folder / "installed.tmp"
+            temporary.write_text(json.dumps(result, indent=2) + "\n")
+            temporary.replace(folder / "installed.json")
+            progress("setup", "ready", model_path=result["model_path"], binary_path=result["binary_path"])
+            return
+
         def download():
             uploaded = folder / cfg["filename"]
             if uploaded.exists():

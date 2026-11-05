@@ -207,12 +207,13 @@ validation. No GPU model is selected automatically at launch.
 
 ## ![Optional Pi models](../assets/docs/headings/h2-optional-pi-models.svg)
 
-Model weights are **not included in Git**. Setup can download and build either or both models after you choose them:
+Model weights are **not included in Git**. First-time setup and `/setup` offer optional installation of these models:
 
 | Model | Pinned weight size | Available RAM needed | Coding context | Notes |
 | --- | --- | --- | --- | --- |
 | [Qwen3.5-35B-A3B IQK](https://huggingface.co/mtrpires/Qwen3.5-35B-A3B-IQK-RPi5-16GB) | 12.23 GB | 13 GiB | 16K | Pi 5 CPU profile; also available as a sentinel |
 | [BugTrace APEX Mini](https://huggingface.co/terrorswift/BugTraceAI-Apex-G4-26B-APEX-GGUF) | 12.26 GB | 13 GiB | 8K | APEX Mini file from this repository; Q8 KV cache |
+| [Blackfrost LFM3 1.7B](https://huggingface.co/Blackfrost-AI/LFM3-1.7B-DERISKED) | 3.46 GB BF16 source → estimated 1.8–2.0 GB Q8 | 4 GiB serving; 6 GiB conversion | 16K | Converts this exact checkpoint locally; newer pinned ARM64 CPU runtime |
 
 **No GPUs Needed! Can run locally without GPUs.** These profiles target the
 16 GB Raspberry Pi 5. They do not launch Lambda instances or change GPU status.
@@ -220,13 +221,31 @@ Switching between them unloads the previous Pi model first.
 
 Use one Pi coding model at a time. A Pi coding model and a Pi sentinel cannot run concurrently in this harness. Pair a local sentinel with an API or Lambda coding model instead.
 
-Allow at least **25 GiB free for one installation**, or about **40 GiB for both plus build space**. The installer downloads pinned revisions, verifies SHA-256 checksums and builds the pinned local serving runtime. Existing validated files can be reused. Review each publisher's model license before download or redistribution. Downloads can be lengthy and are never silently started by cloning or launching the menu.
+For Qwen/BugTrace, allow at least **25 GiB free for one installation**, or about **40 GiB for both plus build space**. The installer downloads pinned revisions, verifies SHA-256 checksums and builds the pinned local serving runtime. Existing validated files can be reused. Review each publisher's model license before download or redistribution. Downloads can be lengthy and are never silently started by cloning or launching the menu.
 
-To install later:
+For **LFM3**, setup option **4** downloads the source (about **3.48 GB** including
+tokenizer/configuration) and converts it to Q8_0 GGUF in an isolated environment.
+Allow **12 GiB free temporarily** and approximately **3 GB installed**; converted
+weight size is projected until a full conversion is measured. Successful setup
+removes its temporary BF16 files and converter dependencies, retaining the Q8
+model, serving runtime, original chat template, licenses and provenance receipt.
+Failed attempts retain their inputs for retry. Option **5** installs all three Pi
+models; existing choices 1–3 remain Qwen, BugTrace and Qwen+BugTrace.
+
+LFM3 uses official llama.cpp b12124 with thinking enabled and a 16K coding context.
+The ARM64 server executable has been checked on the Pi; full checkpoint
+conversion, inference speed and coding/tool reliability remain unvalidated.
+Its publisher provides BF16 weights and custom Transformers code; this pipeline
+uses pinned llama.cpp conversion and does not execute that model repository's
+Python code. Review the publisher's **LFM Open License v1.0** before use or
+redistribution. Pins are in [`pi-lfm3.lock.json`](../config/locks/pi-lfm3.lock.json).
+
+To install later, use `/setup`, or run the relevant command:
 
 ```bash
 .venv/bin/python scripts/install/install_pi_model.py --model mtrpires/Qwen3.5-35B-A3B-IQK-RPi5-16GB
 .venv/bin/python scripts/install/install_pi_model.py --model terrorswift/BugTraceAI-Apex-G4-26B-APEX-GGUF
+.venv/bin/python scripts/install/install_pi_model.py --model Blackfrost-AI/LFM3-1.7B-DERISKED
 ```
 
 <a name="optional-local-sentinel-models"></a>

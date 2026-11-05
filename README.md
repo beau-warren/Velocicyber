@@ -47,7 +47,7 @@ and each model's **More Details** menu before choosing hardware.
 - Select a supported Lambda GPU model, review compatible capacity and hourly
   pricing, then approve instance launch and model deployment. Upload progress
   refreshes every 60 seconds as download events arrive; completion appears immediately.
-- Run the Qwen or BugTrace Pi CPU profiles after installing their optional weights
+- Run the Qwen, BugTrace or LFM3 Pi CPU profiles after installing their optional weights
   and serving runtime.
 - Start and resume conversations, queue follow-up prompts, interrupt work, and
   receive notices when context compaction occurs.
@@ -67,7 +67,7 @@ and each model's **More Details** menu before choosing hardware.
 | Role | Included choices |
 | --- | --- |
 | API coding | CyberKimi; CyberGLM |
-| Raspberry Pi CPU coding | Qwen3.5-35B-A3B IQK; BugTrace APEX Mini |
+| Raspberry Pi CPU coding | Qwen3.5-35B-A3B IQK; BugTrace APEX Mini; Blackfrost LFM3 1.7B Q8 |
 | Lambda GPU coding | M.O.G.-SEC 27B; OrcaCyber Nano; Flint Mix-24G; CYBER-FROST 3.8 BF16; GLM-5.3 Flash EXL3/TensorFold; SAGE-A1P5 BF16 V2 |
 | Local sentinel | Qwen3.5-35B-A3B IQK; Granite Guardian 4.1 8B Q4 |
 

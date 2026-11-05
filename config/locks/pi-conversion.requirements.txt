@@ -1,0 +1,9 @@
+# Isolated LFM3 converter environment; never installed into the harness venv.
+--index-url https://pypi.org/simple
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.11.0
+transformers==5.12.1
+numpy==2.2.6; python_version < "3.14"
+numpy==2.4.6; python_version >= "3.14"
+sentencepiece==0.2.1
+protobuf==4.25.8

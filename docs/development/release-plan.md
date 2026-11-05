@@ -493,3 +493,31 @@ passed in the full run, then two old menu-count expectations were updated and
 passed on rerun. Ruff and the staged credential/private-data scan passed.
 Public model metadata and runtime ancestry were inspected. Download access and the bounded 64 KiB GGUF
 header were confirmed after the user accepted the gated model terms. No model weights, container layers or datasets were uploaded.
+
+
+<a name="lfm3-pi-coding-option--2026-11-05"></a>
+
+## ![LFM3 Pi coding option — 2026-11-05](../../assets/docs/headings/h2-lfm3-pi-coding-option--2026-11-05.svg)
+
+- [x] Add `Blackfrost-AI/LFM3-1.7B-DERISKED` to the Pi-only `/local` menu with
+  storage/RAM details; preserve Lambda state and one-at-a-time local serving.
+- [x] Offer optional installation in first-time setup and `/setup`, keeping
+  original choices 1–3, adding LFM3 as 4 and all three models as 5.
+- [x] Pin the exact BF16 source files, official ARM64 runtime and llama.cpp
+  converter. Convert locally to Q8_0 without executing model-repository Python.
+- [x] Keep conversion dependencies isolated, verify generated output and runtime
+  receipts, and delete only installer-owned temporary files after success.
+- [x] Review every README; update the main README and affected model guidance.
+- [x] Complete offline regression and converter validation before publication.
+- [ ] Full checkpoint conversion and live coding/tool validation after the user
+  chooses to install/test the model. No model weights were downloaded for research.
+
+Storage: source weights 3,457,635,448 bytes; about 3.48 GB with tokenizer/config.
+Projected retained Q8 weights 1.8–2.0 GB; allow 3 GB installed and 12 GiB temporary
+free space. The pinned b12124 CPU runtime started successfully on this Pi.
+
+Validation: 694 full-suite checks passed with the installed ARM64 engine, followed
+by 17 focused LFM3 checks including the runtime's internal library links. The
+isolated pinned converter imports successfully and converted the exact published
+tokenizer/configuration to vocabulary-only GGUF. Model weights/inference were not
+used. Ruff passed; the native b12124 ARM64 executable also reported its version.

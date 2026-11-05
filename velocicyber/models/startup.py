@@ -18,7 +18,7 @@ from velocicyber.models.gpu_profiles import (
     ORCACYBER_REPO,
     SAGE_REPO,
 )
-from velocicyber.models.pi_profiles import BUGTRACE_PI_REPO, PI_PROFILES
+from velocicyber.models.pi_profiles import BUGTRACE_PI_REPO, LFM3_PI_REPO, PI_PROFILES
 
 
 @dataclass(frozen=True)
@@ -57,6 +57,8 @@ def model_option_label(repo, *, ready=False):
             + (
                 "\nReady now — Raspberry Pi CPU"
                 if ready
+                else "\nFirst use: 3.48 GB source download + local Q8 conversion; then local loading."
+                if repo == LFM3_PI_REPO
                 else "\nFirst use: 11.4 GiB weights + CPU runtime setup; then local loading."
             )
         )
@@ -74,6 +76,20 @@ def model_option_label(repo, *, ready=False):
 def model_details(repo, *, ready=False):
     """Offline model information for the details view, separate from picker labels."""
     summary = model_option_label(repo, ready=ready).partition("\n")[2]
+    if repo == LFM3_PI_REPO:
+        return (
+            summary + "\n\nHardware: Raspberry Pi 5 (Linux ARM64); about 4 GiB available RAM "
+            "for serving, 6 GiB during conversion. No Lambda GPU required.\n"
+            "Source weights: 3.46 GB BF16; ~3.48 GB with tokenizer/configuration.\n"
+            "Setup converts the exact Blackfrost checkpoint to Q8_0 GGUF locally.\n"
+            "Estimated Q8 weights: 1.8–2.0 GB; allow about 3 GB installed.\n"
+            "Keep at least 12 GiB free during setup for downloads, conversion and dependencies.\n"
+            "Temporary BF16 files and the converter environment are removed after successful conversion.\n"
+            "Context: 16K, text/coding tools; thinking enabled. One Pi model at a time.\n"
+            "First setup and generation speeds are unmeasured; conversion runs once.\n"
+            "CPU runtime verified on Pi; full model conversion and coding validation pending.\n"
+            "Model license: LFM Open License v1.0; review the publisher's terms."
+        )
     if repo == BUGTRACE_PI_REPO:
         return (
             summary + "\n\nVariant: APEX Mini GGUF (12.3 GB / 11.4 GiB).\n"
