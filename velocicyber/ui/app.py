@@ -73,6 +73,7 @@ class VelocicyberApp(App):
         self.uploader = Uploader(settings)
         self.updates = UpdateChecker(settings)
         self.update_check_running = False
+        self.startup_update_message = ""
         self.maintenance_action = ""
         self.maintenance_plan = {}
         self.compacting = False
@@ -152,6 +153,8 @@ class VelocicyberApp(App):
             self.say("Checking the saved GPU's current status once.")
             self.gpu_operation("refresh")
         if not self.demo:
+            if self.startup_update_message:
+                self.say(self.startup_update_message)
             if tag := take_update_notice(self.settings.runtime):
                 self.notify(f"Velocicyber engine updated to {tag}.", title="Update complete")
             self.refresh_updates()
@@ -242,11 +245,25 @@ class VelocicyberApp(App):
             choices.append(("components", "Update " + describe(plan) + " — test, back up, then activate"))
         choices.extend([("engine-tools", "Engine test / rollback options"),
                         ("harness-rollback", "Roll back the last Velocicyber update")])
+        from velocicyber.updates.startup import automatic_updates
+        choices.append(("automatic-source", "Automatic repo updates on launch: "
+                        + ("ON" if automatic_updates(self.settings) else "OFF")))
         summary = "\n".join(component + ": " + item["target"][:18] for component, item in plan.items())
         self.push_screen(Menu("Updates" + ("\n" + summary if plan else " — no verified updates available; see /updates-info"), choices),
                          lambda action: self.confirm_updates(action, plan))
 
     def confirm_updates(self, action, plan):
+        if action == "automatic-source":
+            from velocicyber.updates.startup import automatic_updates
+            if automatic_updates(self.settings):
+                self.set_automatic_source_updates(False)
+            else:
+                self.push_screen(Menu(
+                    "Automatically test and install official repo updates on future launches?\n"
+                    "Active sessions are left alone. Engine upgrades still require approval.",
+                    [(False, "Cancel"), (True, "Enable automatic repo updates on launch")]),
+                    lambda approved: self.set_automatic_source_updates(True) if approved else None)
+            return
         if action == "engine-tools":
             self.engine_update_menu()
             return
@@ -257,6 +274,16 @@ class VelocicyberApp(App):
         self.push_screen(Menu(description + "\nThis closes the harness, stops the Pi model and terminates its GPU.\nProceed?",
                               [(False, "Cancel"), (True, "Yes — proceed")]),
                          lambda approved: self.begin_updates(action, plan) if approved else None)
+
+    def set_automatic_source_updates(self, enabled):
+        from velocicyber.updates.startup import set_automatic_updates
+        try:
+            set_automatic_updates(self.settings, enabled)
+        except (OSError, ValueError) as exc:
+            self.say("Could not save the automatic update preference: " + str(exc))
+            return
+        self.say("Automatic repo updates on launch: " + ("ON" if enabled else "OFF")
+                 + ". Engine upgrades remain manual.")
 
     def begin_updates(self, action, plan):
         if self.demo or self.busy or self.gpu_busy or self.pi_busy or self.data_busy or self.sentinel_busy:

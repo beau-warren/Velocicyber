@@ -22,6 +22,8 @@ from velocicyber.datasets.pipeline import RawStore, Scrubber
 def test_run_collection_upload_opt_in(
     settings, episode, monkeypatch, flags, collect, upload, compaction, sandbox_open
 ):
+    from velocicyber.updates import startup
+    monkeypatch.setattr(startup, "startup_updates", lambda *a: pytest.fail("Unexpected source update"))
     calls = []
 
     class Engine:

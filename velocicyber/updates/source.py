@@ -76,6 +76,7 @@ class SourceChecker:
         self.path = settings.runtime / "harness-updates.json"
         self.result = {}
         self.config_error = ""
+        self.startup_notice = ""
         self.checked_this_launch = False
         self.kind, self.installed = "", ""
         try:
@@ -153,4 +154,6 @@ class SourceChecker:
             "Latest main: " + (self.result.get("latest", "")[:12] or "not checked"),
             self.config_error or self.result.get("error", ""),
             "Source: https://github.com/" + REPOSITORY,
+            "Automatic repo updates on launch: " + self.settings.options.get("AUTO_UPDATE_HARNESS", "OFF"),
+            self.startup_notice,
         ]).strip()

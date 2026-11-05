@@ -59,6 +59,20 @@ def main():
     args = parser.parse_args()
     if args.demo and args.command == "setup":
         parser.error("Setup changes configuration; run it without --demo.")
+    settings = Settings.load(args.root)
+    from velocicyber.updates.updater import PENDING
+    if (settings.runtime / PENDING).exists() and not (
+        args.command == "update" and args.rollback_harness
+    ):
+        parser.exit(1, "Interrupted harness update. Run ./velocicyber.sh update --rollback-harness first.\n")
+    startup_checker = None
+    if not args.demo and args.command is None:
+        from velocicyber.updates.startup import startup_updates
+
+        try:
+            startup_checker = startup_updates(settings, lambda message: print(message, flush=True))
+        except (OSError, ValueError, RuntimeError) as exc:
+            parser.exit(1, str(exc) + "\n")
     if not args.demo and args.command in (None, "setup"):
         from velocicyber.onboarding import run_setup
 
@@ -71,11 +85,6 @@ def main():
         if args.command == "setup":
             return
     settings = Settings.load(args.root)
-    from velocicyber.updates.updater import PENDING
-    if (settings.runtime / PENDING).exists() and not (
-        args.command == "update" and args.rollback_harness
-    ):
-        parser.exit(1, "Interrupted harness update. Run ./velocicyber.sh update --rollback-harness first.\n")
     lease = ExitStack()
     try:
         if args.command in (None, "run"):
@@ -176,6 +185,10 @@ def main():
                 workspace=args.workspace,
                 sandbox_open=args.sandbox == "open",
             )
+            if startup_checker is not None:
+                startup_checker.settings = settings
+                app.updates.source = startup_checker
+                app.startup_update_message = startup_checker.startup_notice
             app.run()
             lease.close()  # The UI and its model sessions have now shut down.
             if app.maintenance_action:

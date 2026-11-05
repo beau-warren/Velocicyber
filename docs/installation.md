@@ -92,7 +92,7 @@ Repeat setup or check the installation:
 
 Existing installations are offered the new SSH section once on their next interactive launch after updating, even if first-run setup was already completed. Enter skips it; `./velocicyber.sh setup` reopens it later.
 
-`doctor` and the UI demo make no provider requests. Setup never launches GPUs. Normal UI startup checks both harness source and upstream engine versions once; updates still require manual approval. Headless launches skip interactive setup; use the example files below first.
+`doctor` and the UI demo make no provider requests. Setup never launches GPUs. Normal UI startup checks both harness source and upstream engine versions once; repo updates can be enabled automatically on launch, while engine upgrades require manual approval. Headless launches skip interactive setup; use the example files below first.
 
 <a name="desktop-shortcut"></a>
 
@@ -149,6 +149,22 @@ before changing the active files. Changed Python dependencies are built and test
 in a separate environment. When both need an update, the engine is updated first,
 then the candidate harness is tested against it. Components have separate rollback
 points; if the second fails, the first successful update remains installed.
+
+For automatic **repo** updates, enable **Automatic repo updates on launch** in
+`/update`, or set `AUTO_UPDATE_HARNESS=ON` in your local `Modules.txt`. The default
+is OFF. On subsequent normal launches, the harness checks GitHub, stages and tests
+an available source revision, preserves local data, then installs and restarts
+before opening the menu. This can delay launch while the offline tests run.
+Engine upgrades remain manual even if a newer engine is available.
+
+Automatic activation is skipped when the fresh check fails, local source has
+changed, another harness session is open, or candidate tests fail. The working
+version remains usable; details appear in `/updates-info`. An interrupted update
+that cannot roll back requires recovery before opening the UI. Demo mode,
+`doctor`, `setup`, and headless `run` never install source updates automatically.
+Rolling back a harness update disables this preference to prevent immediate
+reinstallation; re-enable it in `/update` when ready. Source checks run once per
+launch, including after the automatic restart.
 
 For terminal use, close the harness first:
 

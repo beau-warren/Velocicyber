@@ -1,6 +1,7 @@
 # Release repository instructions
 
 - This is the beta release copy. Never edit a sibling prototype installation.
+- Publish fixes from this release repository; refresh consumer installations through the tested harness updater instead of editing their source directly.
 - Never commit .env, personal Modules.txt, SSH keys, runtime state, model weights, conversations, or training data.
 - Update docs/development/release-plan.md as milestones finish; record concrete test results and remaining work.
 - Use offline fixtures first. Paid GPU launches, live model calls, training, and dataset uploads need explicit user authorization.

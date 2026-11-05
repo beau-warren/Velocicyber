@@ -33,5 +33,5 @@ class UpdateChecker:
 
     def details(self):
         return self.source.details() + "\n\n" + self.engine.details() + (
-            "\n\nUse /update to review and manually approve the available components."
+            "\n\nUse /update to approve available components or change automatic repo updates on launch. Engine upgrades remain manual."
         )

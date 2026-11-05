@@ -1412,3 +1412,33 @@ async def test_update_menu_confirms_exact_available_components(settings, monkeyp
         await choose(pilot, 1)
         assert exits == [True]
         assert app.maintenance_action == "components" and app.maintenance_plan == plan
+
+
+async def test_automatic_source_update_menu_requires_one_opt_in_and_can_disable(settings, monkeypatch):
+    from velocicyber.updates import UpdateChecker
+    from velocicyber.updates.startup import automatic_updates
+
+    async def no_check(self):
+        pass
+
+    monkeypatch.setattr(UpdateChecker, "check", no_check)
+    app = VelocicyberApp(settings)
+    monkeypatch.setattr(app, "action_quit", lambda: pytest.fail("Preference must not end the session"))
+    async with app.run_test() as pilot:
+        await app.workers.wait_for_complete()
+        app.command("update")
+        await pilot.pause()
+        await choose(pilot, 3)
+        assert not automatic_updates(settings)
+        await choose(pilot, 0)
+        assert not (settings.root / "Modules.txt").exists()
+        app.command("update")
+        await pilot.pause()
+        await choose(pilot, 3)
+        await choose(pilot, 1)
+        assert automatic_updates(settings)
+        app.command("update")
+        await pilot.pause()
+        await choose(pilot, 3)
+        assert not automatic_updates(settings)
+        assert not app.maintenance_action

@@ -226,6 +226,11 @@ class SourceUpdater:
         if not (self.runtime / PENDING).exists():
             self.preflight(record["target"])
             self.check_files(record["after"], record["before"])
+        # A deliberate rollback must survive the next launch.
+        from velocicyber.updates.startup import automatic_updates, set_automatic_updates
+        if automatic_updates(self.settings):
+            set_automatic_updates(self.settings, False)
+            self.notify("Automatic repo updates disabled after rollback; re-enable them in /update when ready.")
         self.restore(record)
         (self.runtime / BACKUP).unlink(missing_ok=True)
         self.notify("Previous harness restored. Credentials, models and conversations were preserved.")

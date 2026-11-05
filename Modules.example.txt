@@ -1,4 +1,6 @@
 # Copy to Modules.txt to customize this installation. This file contains no credentials.
+# Optional: test and apply official repo updates before the UI opens. Engine upgrades stay manual.
+AUTO_UPDATE_HARNESS=OFF
 # No GPU model is selected automatically.
 HUGGINGFACE_MODEL=
 LOCAL_MODEL_OPTIONS=Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16,orcarouter/OrcaCyber-Nano-1.0,Blackfrost-AI/CYBER-FROST-3.8-BF16,Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold,Blackfrost-AI/SAGE-A1P5-DERISKED-BF16-V2

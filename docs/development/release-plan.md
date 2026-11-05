@@ -390,3 +390,29 @@ fresh setup, one-time migration, external key import, private-file permissions,
 non-key rejection and preservation of existing credentials/dataset settings.
 Ruff passed. No Lambda requests or instance launches were made. This change is
 published after updater support so a test installation can detect it normally.
+
+<a name="automatic-repo-updates-on-launch--2026-11-05"></a>
+
+## ![Automatic repo updates on launch — 2026-11-05](../../assets/docs/headings/h2-automatic-repo-updates-on-launch--2026-11-05.svg)
+
+- [x] Add an opt-in `/update` preference for automatic source updates before the
+  UI opens, defaulting to OFF. Engine upgrades retain explicit manual approval.
+- [x] Reuse source staging, offline validation, private-file preservation,
+  active-session exclusion and rollback. Restart with the validated source and
+  reuse the completed source check instead of querying GitHub again.
+- [x] Defer safely on failed checks/downloads, failed tests, local edits or active
+  sessions. Block UI startup if interrupted activation needs rollback. Disable
+  automatic updates after deliberate source rollback.
+- [x] Keep demo, setup, doctor and headless run free of automatic installation.
+  Preserve the repo-first workflow: publish fixes, then update consumer installs
+  through the harness updater.
+
+Validation: 601 full offline tests passed against the installed ARM64 0.0.59
+engine. After adding the download-timeout regression, all 23 startup-update tests
+passed; the earlier focused updater/interface run passed 83 tests. Ruff passed.
+Checks cover opt-in/cancel/disable, restart flags, one-use revision-bound handoff,
+stale update caches, interrupted recovery, active sessions and rollback behavior.
+Existing Pi model weights were verified against their pinned SHA-256 hashes for
+reuse by a separate consumer install, with independent runtimes and installation
+receipts. No live inference, GPU launches, engine upgrades or dataset uploads
+were performed; the prototype's source and configuration were preserved.

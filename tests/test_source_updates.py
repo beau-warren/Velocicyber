@@ -316,3 +316,13 @@ def test_source_download_strips_auth_on_redirect_and_unpacks_bounded_archive(set
     with pytest.raises(ValueError, match="redirect"):
         SourceUpdater(settings).download(NEW, tmp_path / "bad-download", transport=httpx.MockTransport(
             lambda _: httpx.Response(302, headers={"Location": "https://untrusted.example/source"})))
+
+
+def test_explicit_rollback_disables_automatic_reapplication(source_update):
+    updater, plan, _ = source_update
+    updater.run(plan, approved=True)
+    updater.settings.options["AUTO_UPDATE_HARNESS"] = "ON"
+    updater.run(approved=True, rollback=True)
+    assert updater.settings.options["AUTO_UPDATE_HARNESS"] == "OFF"
+    assert "AUTO_UPDATE_HARNESS=OFF" in (updater.root / "Modules.txt").read_text()
+    assert (updater.root / "app.py").read_text() == "old"

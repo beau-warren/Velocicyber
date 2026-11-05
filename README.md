@@ -56,8 +56,8 @@ and each model's **More Details** menu before choosing hardware.
   asynchronously and stop a task after a possible violation is detected.
 - Collect and prepare main-agent and sentinel data, with optional manual or
   automatic publication to separate Hugging Face datasets you configure.
-- Check upstream engine releases on launch and manually approve a staged update
-  or rollback. Updates are tested before activation.
+- Check harness and engine releases on launch. Optionally install tested repo
+  updates automatically before opening the UI; engine upgrades remain manual.
 
 <a name="current-model-options"></a>
 
@@ -129,7 +129,7 @@ style. Confirming a model from the home screen starts a new conversation; use
 | `/sandbox` | Select workspace restrictions or open access with your account permissions |
 | `/sentinel` | Select the local observer and turn it ON/OFF |
 | `/data-collection`, `/upload-perms` | Control collection, manual/automatic uploads and data retention |
-| `/updates-info`, `/update` | Inspect harness/engine versions or approve available updates |
+| `/updates-info`, `/update` | Inspect versions, approve updates, or toggle automatic repo updates on launch |
 | `/help`, `/quit` | Show help or end the session and terminate its tracked GPU |
 
 Enter queues a prompt while the agent is busy. **Ctrl+X** stops the current task
@@ -175,7 +175,9 @@ predictions are not verified labels. See [data handling](docs/usage.md#data-and-
 The harness uses a separately installed official Open Interpreter engine.
 The launch-time indicator checks both Velocicyber source and the engine. `/update`
 selects whichever components have verified updates, asks for approval, and tests
-them before activation. Inspect `/updates-info` when a check fails. See
+them before activation. To automatically install tested **repo updates on launch**,
+enable the option in `/update` (OFF by default). Engine upgrades always need manual
+approval. Inspect `/updates-info` when a check fails. See
 [updating and rollback](docs/installation.md#updates-and-rollback).
 See [security boundaries](SECURITY.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
 An original-code distribution license must be chosen before public release.
