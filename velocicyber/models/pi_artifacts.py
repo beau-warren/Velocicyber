@@ -49,4 +49,3 @@ def valid_receipt(cfg, folder, saved, *, verify_model=True):
     except (OSError, ValueError, KeyError, TypeError):
         return False
     return True
-

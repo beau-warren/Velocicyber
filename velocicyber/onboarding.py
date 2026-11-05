@@ -181,7 +181,7 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
             install_component(root, "install_api_gateway.py")
     print("\nOptional Pi 5 models (16 GB RAM, Linux ARM64; one coding model at a time):")
     print("1: Qwen3.5 IQK — 12.23 GB; 2: BugTrace APEX Mini — 12.26 GB; 3: Qwen + BugTrace.")
-    print("4: Blackfrost LFM3 1.7B — 3.48 GB download, converted locally to ~1.8–2.0 GB Q8; 5: all three.")
+    print("4: Blackfrost LFM3 1.7B — 3.48 GB source download, converted locally to ~1.8–2.0 GB Q8; 5: all three.")
     print("LFM3: allow ~3 GB installed and 12 GiB free during setup; conversion needs 6 GiB available RAM.")
     print("Qwen/BugTrace: allow 25 GiB free for one, or about 40 GiB for both plus build space.")
     print("Weights are pinned and checksum-verified. Review the publishers' model licenses first.")
