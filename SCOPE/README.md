@@ -16,7 +16,10 @@ Personal scope files are ignored by Git.
 
 The menu offers Qwen3.5-35B-A3B IQK and Granite Guardian 4.1 8B Q4 as local
 observers. Pair either with an API or Lambda coding model; the harness prevents
-concurrent Pi coding and sentinel models.
+concurrent Pi coding and sentinel models. If a Pi coding model is loaded, turning
+Sentinel ON or selecting its model offers a swap: confirm to unload Pi coding and
+start the observer. The confirmation names the coding provider used afterward;
+queued prompts pause and saved conversations are kept.
 
 The sentinel reviews executable tool actions asynchronously and can stop the
 current task after detecting a possible violation. It cannot guarantee prevention

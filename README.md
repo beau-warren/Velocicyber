@@ -165,7 +165,8 @@ predictions are not verified labels. See [data handling](docs/usage.md#data-and-
 - GPU deployment is integrated with Lambda. Personal-workstation GPU management
   and additional cloud/API providers need integration work.
 - Only one Pi coding model can run at a time. A Pi coding model and local sentinel
-  cannot run together; pair the sentinel with an API or Lambda coding model.
+  cannot run together; `/sentinel` offers a confirmed swap that unloads the Pi
+  coding model and starts the observer. Coding then uses the displayed API or Lambda model.
 - The sentinel is a reactive observer. Reviews can be slow or incorrect, and an
   action can finish before its verdict. It cannot guarantee scope enforcement or
   undo completed actions. Prepare a real scope file using [these instructions](SCOPE/README.md).

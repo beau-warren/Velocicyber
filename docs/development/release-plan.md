@@ -450,3 +450,24 @@ launches, provider credential probes or dataset uploads were performed.
 Validation: 23 targeted GPU, serving and interface tests passed, including the
 59/60-second boundary, immediate completion and rejection of invalid progress.
 Ruff passed. No GPU operations or live provider calls were needed.
+
+<a name="confirmed-pi-coding-to-sentinel-swap--2026-11-05"></a>
+
+## ![Confirmed Pi coding to Sentinel swap — 2026-11-05](../../assets/docs/headings/h2-confirmed-pi-coding-to-sentinel-swap--2026-11-05.svg)
+
+- [x] Offer a swap from Sentinel ON and model selection when Pi coding is loaded;
+  name both models and the subsequent coding provider before confirmation.
+- [x] Validate scope first, pause queued prompts, await Pi shutdown/lock release,
+  then start the selected observer. Preserve conversations and GPU resources.
+- [x] Guard concurrent operations, re-confirm changed coding selections, preserve
+  Pi coding on cancellation/invalid scope, and block unmonitored tasks after a
+  failed sentinel start until retry or explicit OFF.
+- [x] Review all READMEs; update the main/scope README sections and affected
+  model/usage guidance without unrelated wording changes.
+
+Validation: all 135 Pi, sentinel and interface regression tests passed using the
+installed ARM64 engine and offline fixtures. All 22 swap tests passed after a
+final failure-status correction; Ruff passed. Tests cover both sentinel models,
+API/GPU routing, cancellation, shutdown ordering, concurrent requests, missing
+scope, stale confirmation, failures, paused queues and demo isolation. No live
+model inference, GPU operations or dataset uploads were performed.

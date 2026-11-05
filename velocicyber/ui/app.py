@@ -665,7 +665,7 @@ class VelocicyberApp(App):
                     "Scope: SCOPE/SCOPE.MD · Reviews tool actions.\n"
                     "ON observes asynchronously and stops possible scope violations.\n"
                     "Actions may finish before review; stopping cannot undo them.\n"
-                    "Sentinel uses Pi RAM; stop the Pi coding model first.\n"
+                    "Sentinel uses Pi RAM; a running Pi coding model can be swapped after confirmation.\n"
                     "Collection and upload permissions also apply to sentinel records.",
                     [(True, "/ON"), (False, "/OFF"), ("models", "Select model")],
                     id="sentinel-menu",
@@ -875,8 +875,8 @@ class VelocicyberApp(App):
             )
 
     def select_local_model(self, repo):
-        if self.busy or self.pi_busy:
-            self.say("Wait for the current task or Pi model startup to finish.")
+        if self.busy or self.pi_busy or self.sentinel_busy:
+            self.say("Wait for the current task or model operation to finish.")
             return
         if repo == "pi-stop":
             self.pi_operation("stop")
@@ -949,8 +949,8 @@ class VelocicyberApp(App):
             self.animate()
 
     def select_api_model(self, model):
-        if self.busy:
-            self.say("Wait for the current task to finish.")
+        if self.busy or self.sentinel_busy:
+            self.say("Wait for the current task or Sentinel operation to finish.")
             return
         if model in API_MODELS:
             selected = API_MODELS[model][1]
@@ -1013,6 +1013,13 @@ class VelocicyberApp(App):
         else:
             self.command(name)
 
+    def sentinel_change_blocked(self):
+        if (self.busy or self.pi_busy or self.sentinel_busy or self.gpu_busy
+                or self.restoring_gpu or self.data_busy or self.session_ending):
+            self.say("Wait for the current task or model operation before changing Sentinel.")
+            return True
+        return False
+
     def set_sentinel(self, enabled):
         if enabled is None:
             return
@@ -1022,42 +1029,96 @@ class VelocicyberApp(App):
                 for key, profile in SENTINEL_MODELS.items()
             ], id="sentinel-models"), self.select_sentinel_model)
             return
-        if self.busy or self.pi_busy or self.sentinel_busy:
-            self.say("Wait for the current task or Pi model operation before changing Sentinel.")
-            return
-        if enabled and sentinel_profile(self.state).local and (
-            self.state.active_provider == "pi" or self.state.pi_ready
-        ):
-            self.say("Stop the Pi coding model and select an API or Lambda model first.")
-            return
-        self.sentinel_operation(enabled)
+        self.request_sentinel(enabled, self.state.sentinel_model)
 
     def select_sentinel_model(self, model):
-        if model is None:
-            return
+        if model is not None:
+            self.request_sentinel(True, model)
+
+    def sentinel_swap_plan(self):
+        provider = self.state.active_provider
+        if provider == "pi":
+            provider = ("local" if self.state.model_ready and self.settings.local_model
+                        and self.state.gpu_status == GPUStatus.RUNNING else "api")
+        return (self.pi.repo, self.state.active_provider, provider, self.chat_model_name(provider))
+
+    def request_sentinel(self, enabled, model):
         if model not in SENTINEL_MODELS:
             self.say("Unknown Sentinel model.")
             return
-        if self.busy or self.pi_busy or self.sentinel_busy:
-            self.say("Wait for the current task or model operation before changing Sentinel.")
+        if self.sentinel_change_blocked():
             return
-        if SENTINEL_MODELS[model].local and (self.state.active_provider == "pi" or self.state.pi_ready):
-            self.say("Stop the Pi coding model before selecting a local Sentinel.")
+        pi_running = (self.state.active_provider == "pi" or self.state.pi_ready
+                      or (self.pi.process is not None and self.pi.process.returncode is None))
+        if enabled and SENTINEL_MODELS[model].local and pi_running:
+            plan = self.sentinel_swap_plan()
+            provider = "Lambda GPU" if plan[2] == "local" else "API"
+            details = ("Stop Pi coding model: " + plan[0]
+                       + "\nStart Sentinel: " + SENTINEL_MODELS[model].label
+                       + "\nFuture prompts and conversation context will use "
+                       + plan[3] + " (" + provider + ") for coding."
+                       + "\nSaved conversations are kept. Queued prompts will be paused.")
+            self.push_screen(Menu(
+                "Swap the Pi coding model for Sentinel?",
+                [(False, "Cancel — keep the Pi coding model"),
+                 (True, "Yes — stop Pi coding and start Sentinel")],
+                id="sentinel-swap", details=details),
+                lambda approved: self.confirm_sentinel_swap(model, plan) if approved else None)
             return
-        self.sentinel_operation(True, model)
+        self.begin_sentinel_operation(enabled, model)
+
+    def confirm_sentinel_swap(self, model, plan):
+        if self.sentinel_change_blocked():
+            return
+        if plan != self.sentinel_swap_plan():
+            self.say("The selected coding model changed. Review the updated swap before continuing.")
+            self.call_after_refresh(self.request_sentinel, True, model)
+            return
+        self.begin_sentinel_operation(True, model, swap_plan=plan)
+
+    def begin_sentinel_operation(self, enabled, model, *, swap_plan=None):
+        # Reserve the operation synchronously, before the worker can yield to a
+        # queued prompt or another model-selection callback.
+        self.sentinel_busy = True
+        if swap_plan is not None:
+            self.pi_busy = True
+        self.sentinel_operation(enabled, model, swap_plan=swap_plan)
 
     @work(group="sentinel", exclusive=True)
-    async def sentinel_operation(self, enabled, model=None):
+    async def sentinel_operation(self, enabled, model=None, *, swap_plan=None):
         self.sentinel_busy = True
+        swapped = False
+        previous_stage = self.state.sentinel_stage
         try:
-            if model is not None:
-                await self.sentinel.stop()
-                self.state.sentinel_model = model
             if self.demo:
+                if model is not None:
+                    self.state.sentinel_model = model
                 self.say("DEMO: Sentinel settings preview only; no model is downloaded or loaded.")
                 return
             if enabled:
+                # Invalid/missing scope must not unload a working coding model.
                 load_scope(self.settings.root)
+            if swap_plan is not None:
+                if swap_plan != self.sentinel_swap_plan():
+                    raise RuntimeError("The coding model changed; select Sentinel again to review the swap.")
+                if self.queued_prompts:
+                    self.queue_paused = True
+                    self.update_prompt_queue()
+                    self.say("Queue paused for the model swap; use /queue when ready.")
+                self.state.sentinel_stage = "UNLOADING PI MODEL"
+                self.animate()
+                await self.pi.stop()  # Wait for exit and release the shared Pi lock/RAM.
+                swapped = True
+                if swap_plan != self.sentinel_swap_plan():
+                    raise RuntimeError("The coding model changed during shutdown; select a coding model and retry Sentinel.")
+                self.state.active_provider = swap_plan[2]
+                if swap_plan[2] == "local":
+                    self.state.private_target = "gpu"
+                self.say("Pi coding model stopped. Next coding model: " + swap_plan[3] + ".")
+            if model is not None and model != self.state.sentinel_model:
+                await self.sentinel.stop()
+                self.state.sentinel_model = model
+            if enabled:
                 await self.sentinel.start(self.say)
                 self.say("Sentinel ON — " + sentinel_profile(self.state).label
                          + " observing tool actions against SCOPE/SCOPE.MD.")
@@ -1065,8 +1126,17 @@ class VelocicyberApp(App):
                 await self.sentinel.stop()
                 self.say("Sentinel OFF — observer model unloaded.")
         except Exception as exc:
+            if swapped:
+                self.state.sentinel_enabled = True
+                self.state.sentinel_ready = False
+                self.state.sentinel_stage = "ERROR"
+                self.say("Sentinel is unavailable after the swap. Retry /sentinel or explicitly turn it OFF before coding.")
+            elif swap_plan is not None:
+                self.state.sentinel_stage = previous_stage
             self.say("Sentinel: " + str(exc))
         finally:
+            if swap_plan is not None:
+                self.pi_busy = False
             self.sentinel_busy = False
             self.animate()
 
@@ -1218,8 +1288,8 @@ class VelocicyberApp(App):
         if value == "terminate":
             self.confirm_termination()
             return
-        if self.gpu_busy:
-            self.say("A GPU operation is in progress.")
+        if self.gpu_busy or self.sentinel_busy:
+            self.say("A GPU or Sentinel operation is in progress.")
             return
         if value in ("on", "load", "connect") and not self.settings.local_model:
             self.say("Choose and confirm a GPU model in /local first.")

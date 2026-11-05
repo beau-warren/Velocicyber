@@ -200,9 +200,10 @@ To install later:
 
 ## ![Optional local sentinel models](../assets/docs/headings/h2-optional-local-sentinel-models.svg)
 
-Place your scope in [`SCOPE/SCOPE.MD`](../SCOPE/README.md), select an API or Lambda
-coding model, then choose the observer in `/sentinel`. Both choices run on the
-Pi CPU with a **4K review context**; neither can run alongside a Pi coding model.
+Place your scope in [`SCOPE/SCOPE.MD`](../SCOPE/README.md), then choose the observer
+in `/sentinel`. If Pi coding is loaded, confirm the offered swap to unload it and
+start Sentinel. Both choices use the Pi CPU with a **4K review context** and need
+an API or Lambda model for coding; the two Pi roles cannot run concurrently.
 
 | Sentinel | Weight source | Weight size | Available RAM needed | Installation |
 | --- | --- | --- | --- | --- |
