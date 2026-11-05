@@ -6,6 +6,7 @@ from dataclasses import dataclass
 CYBER_FROST_REPO = "Blackfrost-AI/CYBER-FROST-3.8-BF16"
 MOG_SEC_REPO = "Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16"
 GLM53_EXL3_REPO = "Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold"
+FLINT_REPO = "orcarouter/Flint-abliterated-GGUF"
 ORCACYBER_REPO = "orcarouter/OrcaCyber-Nano-1.0"
 SAGE_REPO = "Blackfrost-AI/SAGE-A1P5-DERISKED-BF16-V2"
 
@@ -40,6 +41,25 @@ class ServingProfile:
 
 
 GPU_PROFILES = {
+    FLINT_REPO: ServingProfile(
+        family="flint",
+        context_window=65536,
+        minimum_vram_gib=32,
+        minimum_host_memory_gib=64,
+        minimum_disk_gib=96,
+        gpu_families=("A6000", "A100", "H100", "H200", "B200", "B300"),
+        gpu_counts=(1,),
+        arguments=("--temp", "1.0", "--top-p", "0.95", "--top-k", "20"),
+        backend="llama.cpp",
+        gguf_filename="Flint-abliterated-Mix-24G.gguf",
+        notice=(
+            "Lambda GPU required · Mix-24G GGUF (23.99 GB / 22.35 GiB).\n"
+            "Minimum menu choice: Single 40 GB (A100). Recommended: Single 48 GB (A6000).\n"
+            "Profile minimum: 32 GiB VRAM; 24 GB GPUs are too small for this variant.\n"
+            "Harness context: 64K, text/coding, one request at a time.\n"
+            "Projected requirements; Lambda inference/tool use awaiting live validation."
+        ),
+    ),
     SAGE_REPO: ServingProfile(
         family="qwen3_5_moe",
         context_window=32768,

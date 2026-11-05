@@ -2,7 +2,12 @@
 
 # ![Sentinel scope](../assets/docs/headings/h1-sentinel-scope.svg)
 
-From the repository root, create your scope file:
+Use `/sentinel` → `/SCOPE — Edit scope restrictions` to create or edit
+`SCOPE/SCOPE.MD` inside the harness. **Save / Ctrl+S** saves; **Cancel / Esc**
+discards edits. Editing is available between tasks and model operations; saved
+rules apply to the next task. Saving does not turn Sentinel ON.
+
+Alternatively, from the repository root:
 
 ```bash
 cp SCOPE/SCOPE.example.md SCOPE/SCOPE.MD

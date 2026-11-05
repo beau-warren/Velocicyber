@@ -11,7 +11,7 @@
 - `/gpu`: choose available GPU capacity and review price before launching a paid instance.
 - `/new` and `/resume`: start or resume a conversation.
 - `/sandbox`: choose workspace restrictions or access using your Linux account permissions.
-- `/sentinel`: configure the optional local observer; provide `SCOPE/SCOPE.MD` first.
+- `/sentinel`: configure the optional local observer; use `/SCOPE — Edit scope restrictions` to edit `SCOPE/SCOPE.MD`.
 - `/data-collection`: enable collection, control compacted-session eligibility, or manually upload.
 - `/upload-perms`: approve uploads; collection and upload permission start **OFF**.
 - `/queue`: view, pause, resume, or clear queued prompts. Enter queues a prompt while the model is busy; Ctrl+X interrupts and pauses the queue.
@@ -35,5 +35,10 @@ already selected API/GPU provider is kept; Pi coding switches to a ready GPU
 model if available, otherwise the selected API model. Queued prompts pause
 until resumed through `/queue`. Cancel keeps the Pi model running. If Sentinel
 fails to start after unloading, retry it or explicitly turn it OFF before coding.
+
+Edit scope between tasks with `/sentinel` → `/SCOPE`. Save with Ctrl+S or the
+Save button; Esc/Cancel discards edits. Saved rules apply to the next task.
+The editor preserves outside changes instead of overwriting them; reopen if
+another editor changed the file. Personal scope stays outside Git.
 
 The sentinel asynchronously reviews executable actions against `SCOPE/SCOPE.MD` and can stop the current task. It is a **reactive monitor**, not a sandbox or a guaranteed pre-execution approval barrier. Actions can finish before a verdict arrives. Scope files must be written for the actual authorized environment. Sentinel predictions are observations, not verified training labels; review and correct them before fine-tuning.

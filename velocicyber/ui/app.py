@@ -29,6 +29,7 @@ from velocicyber.sentinel.data import SentinelStore
 from velocicyber.sentinel.observer import load_scope
 from velocicyber.sentinel.profiles import SENTINEL_MODELS, local_sentinel_active, sentinel_profile
 from velocicyber.sentinel.runtime import SentinelRuntime
+from velocicyber.sentinel.scope import read_scope
 from velocicyber.state import GPUStatus, State
 from velocicyber.ui.commands import COMMANDS, CONTROLS
 from velocicyber.ui.dashboard import dashboard_text
@@ -42,6 +43,7 @@ from velocicyber.ui.presentation import (
     title_art,
     transcript_text,
 )
+from velocicyber.ui.scope_editor import ScopeEditor
 from velocicyber.ui.transcript import TranscriptLog
 from velocicyber.ui.widgets import Menu, Prompt
 from velocicyber.updates import UpdateChecker
@@ -667,7 +669,8 @@ class VelocicyberApp(App):
                     "Actions may finish before review; stopping cannot undo them.\n"
                     "Sentinel uses Pi RAM; a running Pi coding model can be swapped after confirmation.\n"
                     "Collection and upload permissions also apply to sentinel records.",
-                    [(True, "/ON"), (False, "/OFF"), ("models", "Select model")],
+                    [(True, "/ON"), (False, "/OFF"), ("models", "Select model"),
+                     ("scope", "/SCOPE — Edit scope restrictions")],
                     id="sentinel-menu",
                 ),
                 self.set_sentinel,
@@ -1013,9 +1016,12 @@ class VelocicyberApp(App):
         else:
             self.command(name)
 
+    def sentinel_change_idle(self):
+        return not (self.busy or self.pi_busy or self.sentinel_busy or self.gpu_busy
+                    or self.restoring_gpu or self.data_busy or self.session_ending)
+
     def sentinel_change_blocked(self):
-        if (self.busy or self.pi_busy or self.sentinel_busy or self.gpu_busy
-                or self.restoring_gpu or self.data_busy or self.session_ending):
+        if not self.sentinel_change_idle():
             self.say("Wait for the current task or model operation before changing Sentinel.")
             return True
         return False
@@ -1029,7 +1035,22 @@ class VelocicyberApp(App):
                 for key, profile in SENTINEL_MODELS.items()
             ], id="sentinel-models"), self.select_sentinel_model)
             return
+        if enabled == "scope":
+            if self.sentinel_change_blocked():
+                return
+            try:
+                editor = ScopeEditor(self.settings.root, read_scope(self.settings.root),
+                                     can_save=self.sentinel_change_idle)
+            except (OSError, ValueError) as error:
+                self.say(f"Cannot open scope editor: {error}")
+                return
+            self.push_screen(editor, self.scope_edited)
+            return
         self.request_sentinel(enabled, self.state.sentinel_model)
+
+    def scope_edited(self, saved):
+        if saved:
+            self.say("SCOPE.MD saved. Sentinel will use it for the next task.")
 
     def select_sentinel_model(self, model):
         if model is not None:

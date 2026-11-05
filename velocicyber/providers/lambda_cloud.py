@@ -215,7 +215,8 @@ class GPUManager:
             architecture = meta["general.architecture"]
             if profile and architecture != profile.family:
                 raise ValueError("Model architecture changed; review its GPU serving profile first.")
-            if architecture not in {"qwen2", "qwen3", "qwen3moe", "qwen35", "qwen35moe"}:
+            if (architecture not in {"qwen2", "qwen3", "qwen3moe", "qwen35", "qwen35moe"}
+                    and not (profile and architecture == "flint")):
                 raise ValueError(
                     f"GGUF serving needs validation for architecture {architecture!r}."
                 )

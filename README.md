@@ -68,7 +68,7 @@ and each model's **More Details** menu before choosing hardware.
 | --- | --- |
 | API coding | CyberKimi; CyberGLM |
 | Raspberry Pi CPU coding | Qwen3.5-35B-A3B IQK; BugTrace APEX Mini |
-| Lambda GPU coding | M.O.G.-SEC 27B; OrcaCyber Nano; CYBER-FROST 3.8 BF16; GLM-5.3 Flash EXL3/TensorFold; SAGE-A1P5 BF16 V2 |
+| Lambda GPU coding | M.O.G.-SEC 27B; OrcaCyber Nano; Flint Mix-24G; CYBER-FROST 3.8 BF16; GLM-5.3 Flash EXL3/TensorFold; SAGE-A1P5 BF16 V2 |
 | Local sentinel | Qwen3.5-35B-A3B IQK; Granite Guardian 4.1 8B Q4 |
 
 Repository IDs are in [Modules.example.txt](Modules.example.txt); hardware,
@@ -128,7 +128,7 @@ style. Confirming a model from the home screen starts a new conversation; use
 | `/new`, `/resume`, `/home` | Start, resume, or return to the main menu |
 | `/queue` | Inspect, pause, resume, or clear queued prompts |
 | `/sandbox` | Select workspace restrictions or open access with your account permissions |
-| `/sentinel` | Select the local observer and turn it ON/OFF |
+| `/sentinel` | Select the local observer, turn it ON/OFF, or edit scope with `/SCOPE` |
 | `/data-collection`, `/upload-perms` | Control collection, manual/automatic uploads and data retention |
 | `/setup` | Revisit skipped setup with hidden credential prompts |
 | `/updates-info`, `/update` | Inspect versions, approve updates, or toggle automatic repo updates on launch |

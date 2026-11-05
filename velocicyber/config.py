@@ -153,6 +153,7 @@ class Settings:
 
     def local_context_window(self, model=None):
         from velocicyber.engine.context import DEFAULT_CONTEXT_WINDOW, ContextBudget
+        from velocicyber.models.gpu_profiles import GPU_PROFILES
 
         try:
             profiles = json.loads(self.options.get("LOCAL_MODEL_CONTEXT_WINDOWS", "{}"))
@@ -162,7 +163,9 @@ class Settings:
             raise ValueError("LOCAL_MODEL_CONTEXT_WINDOWS must be a JSON object.")
         for value in profiles.values():
             ContextBudget(value)
-        return profiles.get(model or self.local_model, DEFAULT_CONTEXT_WINDOW)
+        repo = model or self.local_model
+        default = GPU_PROFILES[repo].context_window if repo in GPU_PROFILES else DEFAULT_CONTEXT_WINDOW
+        return profiles.get(repo, default)
 
     @property
     def runtime(self):

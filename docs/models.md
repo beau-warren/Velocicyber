@@ -43,13 +43,14 @@ model alone does not launch an instance or download its weights to the Pi.
 Capacity choices use the menu's GB labels; profile floors, host RAM and disk
 requirements below are in GiB. Floors are configured planning allowances, not
 measured universal minimums. GPU architecture and count must also match the
-profile: total VRAM alone does not establish compatibility. All five profiles
-start with **32K context**, text/coding tools and one request at a time.
+profile: total VRAM alone does not establish compatibility. Profiles use **32K context**, except Flint at **64K**, with text/coding tools
+and one request at a time.
 
 | Model | Lambda capacity choice | Profile VRAM floor | Host RAM minimum | Disk minimum | Serving backend |
 | --- | --- | --- | --- | --- | --- |
 | [M.O.G.-SEC 27B](#mog-sec-27b-bf16) | Single 80 GB H100; 180 GB B200 also supported | 72 GiB | 128 GiB | 256 GiB | vLLM |
 | [OrcaCyber Nano](#orcacyber-nano-mix-157g) | Single 24 GB A10; 48 GB A6000 recommended for headroom | 24 GiB | 32 GiB | 64 GiB | llama.cpp |
+| [Flint Mix-24G](#flint-mix-24g) | Single 40 GB A100 minimum menu choice; 48 GB A6000 recommended | 32 GiB | 64 GiB | 96 GiB | llama.cpp |
 | [CYBER-FROST 3.8 BF16](#cyber-frost-38-bf16) | Cluster 720 GB, 4× B200 recommended for first test | 480 GiB | 512 GiB | 512 GiB | vLLM |
 | [GLM-5.3 Flash TensorFold](#glm-53-flash-exl3tensorfold) | Cluster 360 GB, 2× B200; experimental | 256 GiB | 256 GiB | 512 GiB | TensorFold |
 | [SAGE A1P5 BF16 V2](#sage-a1p5-bf16-v2) | Single 180 GB B200 recommended | 96 GiB | 128 GiB | 256 GiB | vLLM |
@@ -64,6 +65,7 @@ image downloads or compilation can exceed these ranges.
 | --- | --- | --- | --- |
 | M.O.G.-SEC 27B | 10–20 min | 2–4 min | Based on an earlier H100 validation run |
 | OrcaCyber Nano | 25–50 min | 2–5 min | Projected; unmeasured on Lambda |
+| Flint Mix-24G | 35–70 min | 3–6 min | Projected; unmeasured on Lambda |
 | CYBER-FROST 3.8 BF16 | 6–14 hours | 10–30 min | Projected; unmeasured on Lambda |
 | GLM-5.3 Flash TensorFold | 25–60 min | 5–15 min | Projected; unmeasured on Lambda |
 | SAGE A1P5 BF16 V2 | 15–30 min | 3–8 min | Projected; unmeasured on Lambda |
@@ -104,6 +106,37 @@ it has not been measured for this model on Lambda. The Pi coordinates inference,
 while the weights and llama.cpp server run on Lambda. Vision, speculative
 decoding and the advertised 262K context are not enabled. **Live Lambda
 inference and tool use remain unvalidated.**
+
+<a name="flint-mix-24g"></a>
+
+### ![Flint Mix-24G](../assets/docs/headings/h3-flint-mix-24g.svg)
+
+[orcarouter/Flint-abliterated-GGUF](https://huggingface.co/orcarouter/Flint-abliterated-GGUF)
+uses **`Flint-abliterated-Mix-24G.gguf`**: **23.99 GB / 22.35 GiB**. The publisher
+recommends this higher-fidelity variant over Mix-12G and specifies a 32 GB GPU.
+The harness's smallest compatible menu choice is **Single 40 GB A100**;
+**Single 48 GB A6000** is recommended for headroom. A 24 GB GPU is too small
+for this profile. Allow at least **64 GiB host RAM and 96 GiB free disk**.
+Only the selected GGUF downloads to Lambda; no calibration data, second variant
+or BF16 checkpoint is downloaded to either machine.
+
+**Model access is required.** Request access on the Hugging Face model page
+using the account associated with your configured token. Access/header checks
+run before a paid GPU launch. Access and the selected GGUF header were confirmed
+after accepting the terms; metadata supplies the reviewed sizes and checksums.
+
+The dedicated official llama.cpp **b12124** CUDA image is pinned by digest and
+includes [Flint architecture support](https://github.com/ggml-org/llama.cpp/pull/30928)
+and the [template escape fix](https://github.com/ggml-org/llama.cpp/pull/30929).
+It descends from the publisher-tested `e0f142d` revision. This profile uses the
+embedded tool template, **64K context** and always-on reasoning; the advertised
+262K context is not enabled. No CPU/Pi serving profile is added.
+
+Transfer alone is projected at **25–50 minutes** using earlier GGUF rates of
+8–19 MB/s; fresh startup at **35–70 minutes**, or **3–6 minutes** with cached
+weights/image on a running GPU. Faster transfers are possible; slow boots or
+networks can exceed the range. **These estimates and live Lambda inference/tool
+use remain unvalidated.**
 
 <a name="cyber-frost-38-bf16"></a>
 

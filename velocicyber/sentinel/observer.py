@@ -1,7 +1,6 @@
 """Asynchronous scope observation. Never approves or delays individual tool calls."""
 
 import asyncio
-import hashlib
 import json
 import os
 import re
@@ -18,25 +17,7 @@ from velocicyber.engine.capture import utcnow
 from velocicyber.sentinel.data import SentinelStore
 from velocicyber.sentinel.profiles import SENTINEL_MODELS, sentinel_profile
 from velocicyber.sentinel.runtime import URL
-
-
-def load_scope(root):
-    folder = root / "SCOPE"
-    path = folder / "SCOPE.MD"
-    if folder.is_symlink() or path.is_symlink():
-        raise ValueError("SCOPE/SCOPE.MD must be a regular file inside the project.")
-    try:
-        with path.open("rb") as stream:
-            body = stream.read(6001)
-    except FileNotFoundError:
-        raise ValueError("Place your approved scope in SCOPE/SCOPE.MD before turning Sentinel ON.") from None
-    if not body.strip() or len(body) > 6000:
-        raise ValueError("SCOPE.MD must contain 1–6,000 UTF-8 bytes; no scope is silently truncated.")
-    text = body.decode("utf-8")
-    if "EXAMPLE ONLY" in text:
-        raise ValueError("Replace the example with your actual scope before enabling Sentinel.")
-    return text, hashlib.sha256(body).hexdigest()
-
+from velocicyber.sentinel.scope import load_scope
 
 PROMPT_PROTOCOL = "granite-guardian-4.1-actions-v3"
 

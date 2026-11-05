@@ -42,6 +42,19 @@
       "reason": "Pinned vLLM source supports Qwen3_5MoeForConditionalGeneration; reuse the image already checked with M.O.G. SAGE 32K BF16/float32 SSM text+tools profile: live Lambda validation pending.",
       "reviewed_model_revision": "625ca8d6528fcb65407a7e5685778b8d4b16022c",
       "reviewed_weight_bytes": 71908134368
+    },
+    "orcarouter/Flint-abliterated-GGUF": {
+      "image": "ghcr.io/ggml-org/llama.cpp@sha256:1229bedd0f26390644aeb0552edae1e7b1aee025136eda63d3f7fc098e4f3885",
+      "source_tag": "server-cuda",
+      "source_revision": "8bed7cfb999cebc03d2cc5b78911026a8d57549a",
+      "version": "b12124",
+      "checked_on": "2026-11-05",
+      "backend": "llama.cpp",
+      "reason": "Official linux/amd64 CUDA 12.8.1 image includes Flint model support #30928 and template escapes #30929, and descends from publisher-tested e0f142d. One 64K text/coding slot. Lambda inference/tool validation pending.",
+      "reviewed_model_revision": "4d618d1cb1d7782d4b08762fb664487bf5e4d3c4",
+      "reviewed_gguf_filename": "Flint-abliterated-Mix-24G.gguf",
+      "reviewed_weight_bytes": 23993808416,
+      "reviewed_weight_sha256": "f416403575f77a10e6e12bfd3eb919c727a610c9c622b72fd32de0c4f220fdbd"
     }
   }
 }

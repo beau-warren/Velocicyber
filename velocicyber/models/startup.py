@@ -1,4 +1,4 @@
-"""Offline planning estimates, based on September–October 2026 GPU validation.
+"""Offline planning estimates, based on September–November 2026 GPU validation.
 
 Fresh startup includes boot, transfer, checksum, model load and inference check.
 Cached startup assumes weights remain on an already-running compatible GPU.
@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from velocicyber.config import PI_MODEL_NOTICE, PI_MODEL_REPO
 from velocicyber.models.gpu_profiles import (
     CYBER_FROST_REPO,
+    FLINT_REPO,
     GLM53_EXL3_REPO,
     GPU_PROFILES,
     MOG_SEC_REPO,
@@ -32,6 +33,7 @@ class StartupEstimate:
 
 
 ESTIMATES = {
+    FLINT_REPO: StartupEstimate("35–70 min", "3–6 min", projected=True),
     SAGE_REPO: StartupEstimate("15–30 min", "3–8 min", projected=True),
     CYBER_FROST_REPO: StartupEstimate("6–14 hours", "10–30 min", projected=True),
     MOG_SEC_REPO: StartupEstimate("10–20 min", "2–4 min"),
@@ -118,6 +120,23 @@ def model_details(repo, *, ready=False):
             "TensorFold Python runtime with two CUDA ranks; EXL3 is not served by vLLM.\n"
             "Initial profile uses BF16 dense weights/KV and disables speculative drafts.\n"
             "No extra drafter is downloaded. Published Spark speed figures do not predict Lambda speed."
+        )
+    if repo == FLINT_REPO:
+        timing = (
+            "\n\nVariant: Flint-abliterated-Mix-24G.gguf (39.8B MoE, ~2.5B active).\n"
+            "Publisher recommends this higher-fidelity variant over Mix-12G.\n"
+            "Hugging Face download access is required; request access on the model page "
+            "using the account associated with your HF token. Access is checked before GPU launch.\n"
+            "Transfer only to a running GPU: ~25–50 min, projected from prior GGUF "
+            "transfers at 8–19 MB/s; faster links can finish sooner.\n"
+            "Fresh startup adds GPU boot, checksum, container download and loading; "
+            "slow boots or networks can exceed this range. Cached times are also unmeasured.\n"
+            "Downloads only Mix-24G; no Mix-12G, imatrix or full BF16 checkpoint.\n"
+            "Pinned llama.cpp CUDA runtime with native Flint/tool-template support.\n"
+            "Reasoning is always enabled and shares the context budget with the answer.\n"
+            "The advertised 262K context requires a separate serving profile.\n"
+            "The Pi coordinates inference; weights reside on Lambda.\n"
+            "The launch confirmation uses current Lambda pricing and availability."
         )
     if repo == ORCACYBER_REPO:
         timing = (

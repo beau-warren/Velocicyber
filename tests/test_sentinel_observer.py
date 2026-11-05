@@ -459,7 +459,7 @@ async def test_filterable_menu_and_indicator_without_download(settings):
         await pilot.pause()
         await pilot.press("enter")
         assert isinstance(app.screen, Menu)
-        assert app.screen.query_one(OptionList).option_count == 3
+        assert app.screen.query_one(OptionList).option_count == 4
         app.screen.query_one("#menu-filter", Input).value = "off"
         await pilot.pause()
         assert app.screen.query_one(OptionList).option_count == 1

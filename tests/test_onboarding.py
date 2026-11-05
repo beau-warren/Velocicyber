@@ -159,14 +159,14 @@ def test_example_configuration_is_portable_and_local_overrides_win(tmp_path):
     root = Path(__file__).resolve().parents[1]
     (tmp_path / "Modules.example.txt").write_bytes((root / "Modules.example.txt").read_bytes())
     settings = Settings.load(tmp_path)
-    assert len(settings.gpu_model_choices) == 5
+    assert len(settings.gpu_model_choices) == 6
     assert len(settings.pi_model_choices) == 2
     assert not settings.local_model and not settings.dataset_repo
     assert not settings.options["SENTINEL_FINETUNING_REPO"]
     (tmp_path / "Modules.txt").write_text("FINETUNING_REPO=owner/main\nSENTINEL_FINETUNING_REPO=owner/sentinel\n")
     settings = Settings.load(tmp_path)
     assert settings.dataset_repo == "owner/main"
-    assert len(settings.gpu_model_choices) == 5
+    assert len(settings.gpu_model_choices) == 6
 
 
 @pytest.mark.parametrize("choice,created", [("yes", True), ("", False), ("n", False)])

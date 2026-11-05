@@ -471,3 +471,25 @@ final failure-status correction; Ruff passed. Tests cover both sentinel models,
 API/GPU routing, cancellation, shutdown ordering, concurrent requests, missing
 scope, stale confirmation, failures, paused queues and demo isolation. No live
 model inference, GPU operations or dataset uploads were performed.
+
+
+<a name="scope-editor-and-flint-lambda-profile--2026-11-05"></a>
+
+## ![Scope editor and Flint Lambda profile — 2026-11-05](../../assets/docs/headings/h2-scope-editor-and-flint-lambda-profile--2026-11-05.svg)
+
+- [x] Add `/sentinel` → `/SCOPE — Edit scope restrictions`, with an in-harness
+  text editor, Save/Cancel, UTF-8 byte limit and idle-task guards.
+- [x] Reuse validated scope loading; save atomically with owner-only permissions,
+  reject symlinks/nonregular files, and preserve concurrent external edits.
+- [x] Add Flint Mix-24G to `/local` with 40 GB minimum menu capacity, 48 GB
+  recommended, host/disk requirements and explicitly projected startup estimates.
+- [x] Pin a dedicated official CUDA runtime containing Flint model/template
+  support. Keep one 64K slot, exact GGUF selection, checksums and launch approval.
+- [x] Review all READMEs; update main/scope guidance and affected model/usage docs.
+- [ ] Live Flint Lambda inference/tool validation after explicit authorization for a paid GPU. No instance was launched.
+
+Validation: 676 offline checks verified with the installed ARM64 engine: 674
+passed in the full run, then two old menu-count expectations were updated and
+passed on rerun. Ruff and the staged credential/private-data scan passed.
+Public model metadata and runtime ancestry were inspected. Download access and the bounded 64 KiB GGUF
+header were confirmed after the user accepted the gated model terms. No model weights, container layers or datasets were uploaded.
