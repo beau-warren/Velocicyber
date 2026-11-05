@@ -18,7 +18,7 @@
 - `/upload-perms`: approve uploads; collection and upload permission start **OFF**.
 - `/queue`: view, pause, resume, or clear queued prompts. Enter queues a prompt while the model is busy; Ctrl+X interrupts and pauses the queue.
 
-Menus filter as you type `/` and the command name. Confirming a model from the main menu begins a new session. The dashboard identifies the active model and runtime states.
+Menus filter as you type `/` and the command name. Activating a model from the main menu begins a new session. The dashboard identifies the active model and runtime states.
 
 Use the harness's shutdown flow to terminate a tracked Lambda instance. After an unexpected crash or power loss, check your Lambda account: provider billing can continue until termination is confirmed.
 

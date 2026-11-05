@@ -97,7 +97,7 @@ First launch asks for your Lambda, Adverserial.ai and Hugging Face credentials,
 and separate main-agent and sentinel dataset names. Each optional item can be
 skipped. Keys stay in your local `.env`; other settings go in `Modules.txt`.
 Collection and uploads start **OFF**. No GPU model is selected automatically, and
-model weights download only after explicit setup consent or a download confirmation
+Pi model weights download only after explicit setup consent or a download confirmation
 when selecting an uninstalled Pi model in `/local`.
 Setup also offers Lambda SSH key-name and private-key selection/import; see [SSH setup](ssh-keys/README.md).
 On Linux desktops, setup also offers an optional [desktop launcher and neon V icon](docs/installation.md#desktop-shortcut); press Enter to skip.
@@ -119,7 +119,7 @@ Revisit skipped setup with `/setup` (or `./velocicyber.sh setup` in a terminal).
 ## ![Using the harness](assets/docs/headings/h2-using-the-harness.svg)
 
 Type `/` and a command name to filter the menu. Submenus use the same filtering
-style. Confirming a model from the home screen starts a new conversation; use
+style. Activating a model from the home screen starts a new conversation; use
 `/resume` to reopen saved history. The dashboard identifies the active model.
 
 | Command | Purpose |
@@ -184,7 +184,7 @@ enable the option in `/update` (OFF by default). Engine upgrades always need man
 approval. Inspect `/updates-info` when a check fails. See
 [updating and rollback](docs/installation.md#updates-and-rollback).
 See [security boundaries](SECURITY.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
-An original-code distribution license must be chosen before public release.
+No license for the original harness code is currently included in this repository.
 
 <a name="guides"></a>
 
@@ -195,9 +195,7 @@ An original-code distribution license must be chosen before public release.
 | [Installation](docs/installation.md) | curl download, first-run setup, credentials and manual configuration |
 | [Model setup](docs/models.md) | Lambda SSH setup, GPU profiles and optional Pi downloads |
 | [User guide](docs/usage.md) | Sessions, queued prompts, data collection and sentinel behavior |
-| [Architecture and development](docs/development/architecture.md) | Source map, model extensions, engine updates and tests |
-| [Sources and upstream references](docs/sources.md) | Documentation, model cards, version pins and integration modules |
-| [Release checklist](docs/development/release-plan.md) | Completed milestones, validation and remaining release gates |
+| [Sources and upstream references](docs/sources.md) | Provider documentation, model cards, runtime versions and licenses |
 
 <a name="repository-layout"></a>
 
@@ -208,7 +206,7 @@ velocicyber/     Python application, grouped by responsibility
 config/locks/   Pinned engine, model and serving runtime metadata
 scripts/        Installers, runtime helpers, maintenance and validation tools
 tests/          Offline regressions and engine compatibility checks
-docs/           Setup, usage, architecture and release checklist
+docs/           Installation, model requirements, usage and upstream references
 assets/         Desktop icon and branding
 chat-templates/ Attributed model chat templates
 SCOPE/          Scope example and location for your private scope file

@@ -29,3 +29,7 @@ build/
 *.gguf
 *.safetensors
 .pytest-temp/
+# Maintainer-only planning and agent instructions stay out of releases.
+/AGENTS.md
+/docs/development/
+/[Mm][Ii][Ll][Ee][Ss][Tt][Oo][Nn][Ee]*.[Mm][Dd]

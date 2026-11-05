@@ -17,7 +17,6 @@ DOCUMENTS = (
     "README.md", "SECURITY.md", "THIRD_PARTY_NOTICES.md",
     "SCOPE/README.md", "ssh-keys/README.md", "chat-templates/README.md",
     "docs/installation.md", "docs/models.md", "docs/usage.md", "docs/sources.md",
-    "docs/development/architecture.md", "docs/development/release-plan.md",
 )
 
 # Original, simple 5-by-7 block lettering. Each hex value describes one row.

@@ -9,13 +9,20 @@
 - Use only your own credentials. Setup hides key entry and writes `.env` and `Modules.txt` atomically with `0600` permissions. Keep these permissions when copying them manually.
 - Secrets, personal scope documents, SSH keys, runtime state, model weights, conversations and training records are excluded from Git. Never override these exclusions with a forced add.
 - There are no default maintainer dataset destinations. Both datasets are optional, separately configured, and must differ. Collection and upload permissions start off.
-- Runtime and model installers use pinned source revisions or artifacts; model/engine archives are checksum-verified. Python dependencies are version-pinned, but the lock does not provide package artifact hashes. A broader dependency and supply-chain review remains a public-release gate.
+- Runtime and model installers use pinned source revisions or artifacts; model/engine archives are checksum-verified. Python dependencies are version-pinned, but the lock does not provide package artifact hashes.
 
 <a name="runtime-boundaries"></a>
 
 ## ![Runtime boundaries](assets/docs/headings/h2-runtime-boundaries.svg)
 
-The engine's workspace sandbox is the default. Opening the sandbox gives executed code your Linux account's permissions. Keep credentials and unrelated sensitive files outside a task workspace. Do not treat an LLM or the sentinel as a security boundary. The reactive sentinel can be late, wrong, or unavailable and does not undo completed actions.
+The engine's workspace sandbox is the default. It restricts writes and network
+access; it does not isolate readable files elsewhere in your Linux account.
+Keeping a secret outside the workspace alone does not prevent the agent from
+reading it. Use a separate restricted account or isolated environment for tasks
+that must not access your personal files. Opening the sandbox gives executed
+code your Linux account's permissions. Commands run on the local machine even
+when model inference runs through an API or Lambda. The reactive sentinel can
+be late, wrong, or unavailable and does not undo completed actions.
 
 Local API/Pi inference endpoints use loopback listeners. The Lambda inference port is published to host loopback and forwarded over SSH; listeners inside its container are not a public host binding. Users control their own cloud firewall rules. SSH uses first-use trust (`accept-new`) and persists known host keys; out-of-band fingerprint validation is still recommended.
 
@@ -64,4 +71,7 @@ reactive sentinel is not a guarantee that a backdoor will be detected or stopped
 
 ## ![Reporting and release status](assets/docs/headings/h2-reporting-and-release-status.svg)
 
-Beta validation and public-release checks are ongoing. Report suspected issues privately to the repository owner; do not put credentials or private task logs in an issue. Automated checks do not establish the absence of vulnerabilities. A fresh model installation, provider integration testing with explicit approval, licensing decision and broader security review remain necessary before a public release.
+This is beta software. Report suspected issues privately to the repository
+owner; do not put credentials or private task logs in an issue. Automated checks
+do not establish the absence of vulnerabilities. See [model setup](docs/models.md)
+for the validation limits of each serving profile.

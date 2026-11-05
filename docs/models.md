@@ -28,11 +28,8 @@ the sentinel menu contains local models only.
 
 Add your own Lambda SSH private key under `ssh-keys/`, set its mode to `0600`, and register the matching public key with Lambda. Set `LAMBDA_SSH_KEY_NAME` and `SSH_PRIVATE_KEY` in your local `Modules.txt`. Leave `LAMBDA_REGION` blank to select according to availability, or set your preferred region.
 
-GPU serving profiles live in
-[`gpu_profiles.py`](../velocicyber/models/gpu_profiles.py), startup estimates in
-[`startup.py`](../velocicyber/models/startup.py), and serving runtime pins in
-[`serving.lock.json`](../config/locks/serving.lock.json). Select a model with
-`/local`, then choose compatible capacity through `/gpu`. Launch confirmation
+Review requirements and startup estimates under `/local` → **More Details**,
+then choose compatible capacity through `/gpu`. Launch confirmation
 shows current Lambda pricing and availability and requires consent. Selecting a
 model alone does not launch an instance or download its weights to the Pi.
 
@@ -122,15 +119,12 @@ or BF16 checkpoint is downloaded to either machine.
 
 **Model access is required.** Request access on the Hugging Face model page
 using the account associated with your configured token. Access/header checks
-run before a paid GPU launch. Access and the selected GGUF header were confirmed
-after accepting the terms; metadata supplies the reviewed sizes and checksums.
+run before a paid GPU launch. Each user needs access through their own account;
+access granted to another user does not carry over to a fresh installation.
 
-The dedicated official llama.cpp **b12124** CUDA image is pinned by digest and
-includes [Flint architecture support](https://github.com/ggml-org/llama.cpp/pull/30928)
-and the [template escape fix](https://github.com/ggml-org/llama.cpp/pull/30929).
-It descends from the publisher-tested `e0f142d` revision. This profile uses the
-embedded tool template, **64K context** and always-on reasoning; the advertised
-262K context is not enabled. No CPU/Pi serving profile is added.
+The profile uses a pinned llama.cpp **b12124** CUDA image, the embedded tool
+template, **64K context** and always-on reasoning. The advertised 262K context
+is not enabled. Flint runs on Lambda; it is not a Pi CPU model choice.
 
 Transfer alone is projected at **25–50 minutes** using earlier GGUF rates of
 8–19 MB/s; fresh startup at **35–70 minutes**, or **3–6 minutes** with cached
@@ -197,7 +191,7 @@ is available through `/local` → **More Details** / **Confirm selected model ch
 
 ### ![Configuring the GPU model menu](../assets/docs/headings/h3-configuring-the-gpu-model-menu.svg)
 
-New installations receive all five entries from `Modules.example.txt`. If an
+New installations receive all supported GPU entries from `Modules.example.txt`. If an
 existing installation overrides `LOCAL_MODEL_OPTIONS` in its own `Modules.txt`,
 append any missing repository IDs there. Adding an arbitrary repository ID does
 not create a compatible serving profile; unsupported models need an adapter and

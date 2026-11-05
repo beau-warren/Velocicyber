@@ -48,7 +48,7 @@ The standalone `bootstrap.py` downloads this repository, resolves the requested 
 
 Then launch `~/Velocicyber/velocicyber.sh` for credential and dataset setup. Change `--dir` to choose a different new directory. Add `--download-only` to save source without installing Python dependencies, or `--ref TAG_OR_COMMIT` to choose a version. Existing installations are preserved; this downloader is not an in-place updater. A failed dependency installation keeps the source so you can rerun its `install.sh`.
 
-**After an explicitly approved public release**, authentication can be omitted:
+**For a public copy of this repository**, authentication can be omitted:
 
 ```bash
 (
@@ -62,7 +62,7 @@ Then launch `~/Velocicyber/velocicyber.sh` for credential and dataset setup. Cha
 )
 ```
 
-The public command will not work while this repository is private. Neither command changes repository visibility. Downloads rely on GitHub over HTTPS; the source revision is recorded in `.runtime/source-install.json`. The bootstrap entrypoint follows `main`; inspect it before execution if you need a reviewed installer.
+The public command will not work while this repository is private. Downloads rely on GitHub over HTTPS; the source revision is recorded in `.runtime/source-install.json`. The bootstrap entrypoint follows `main`; inspect it before execution if you need a reviewed installer.
 
 <a name="first-run-setup"></a>
 
