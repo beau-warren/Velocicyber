@@ -551,7 +551,7 @@ def test_transfer_progress_throttled_validated_and_not_restored(settings, monkey
 
     progress(200)  # A resumed transfer reports its current position immediately.
     assert state.model_stage == "download" and state.download_bytes == 200
-    clock += 299
+    clock += 59
     progress(500)
     assert state.download_bytes == 200
     clock += 1
@@ -568,7 +568,7 @@ def test_transfer_progress_throttled_validated_and_not_restored(settings, monkey
     progress(-1)
     progress(1001)
     assert state.download_bytes == 600
-    progress(1000)  # Completion is immediate even inside the five-minute window.
+    progress(1000)  # Completion is immediate even inside the one-minute window.
     assert state.download_bytes == 1000 and not state.model_ready
     manager.deployment_progress('{"stage":"download_verifying"}')
     assert state.model_stage == "verify" and not state.model_ready

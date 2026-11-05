@@ -542,7 +542,7 @@ class GPUManager:
             now = time.monotonic()
             if (
                 self._download_updated_at is None
-                or now - self._download_updated_at >= 300
+                or now - self._download_updated_at >= 60
                 or done == total
             ):
                 self.state.model_stage = "download"

@@ -438,3 +438,15 @@ headless UI teardown and reopening, exclusive setup locking, interruptions and
 update/rollback regressions. Ruff passed. All credentials, desktop shortcuts and
 configuration writes in tests used temporary fixtures. No live inference, GPU
 launches, provider credential probes or dataset uploads were performed.
+
+<a name="gpu-upload-progress-refresh--2026-11-05"></a>
+
+## ![GPU upload progress refresh — 2026-11-05](../../assets/docs/headings/h2-gpu-upload-progress-refresh--2026-11-05.svg)
+
+- [x] Reduce the streamed transfer-progress display interval from 300 to 60
+  seconds, preserving immediate initial/completion events and loading-stage changes.
+- [x] Review all READMEs; document the interval in the main README only.
+
+Validation: 23 targeted GPU, serving and interface tests passed, including the
+59/60-second boundary, immediate completion and rejection of invalid progress.
+Ruff passed. No GPU operations or live provider calls were needed.

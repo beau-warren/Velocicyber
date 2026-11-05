@@ -45,7 +45,8 @@ and each model's **More Details** menu before choosing hardware.
 
 - Use CyberKimi or CyberGLM through the Adverserial.ai confidential API client.
 - Select a supported Lambda GPU model, review compatible capacity and hourly
-  pricing, then approve instance launch and model deployment.
+  pricing, then approve instance launch and model deployment. Upload progress
+  refreshes every 60 seconds as download events arrive; completion appears immediately.
 - Run the Qwen or BugTrace Pi CPU profiles after installing their optional weights
   and serving runtime.
 - Start and resume conversations, queue follow-up prompts, interrupt work, and
