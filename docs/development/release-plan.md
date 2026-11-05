@@ -521,3 +521,15 @@ by 17 focused LFM3 checks including the runtime's internal library links. The
 isolated pinned converter imports successfully and converted the exact published
 tokenizer/configuration to vocabulary-only GGUF. Model weights/inference were not
 used. Ruff passed; the native b12124 ARM64 executable also reported its version.
+
+Pi download consent follow-up:
+
+- [x] Ask the user's exact download question before starting an uninstalled Pi
+  model; No/Enter or Esc preserves the current model and conversation. Yes grants
+  download permission only for that selection. Existing installed models reuse
+  their files without the extra prompt; setup remains explicitly opt-in.
+- [x] Require explicit download permission in the Pi model loader as well.
+- [x] Review all READMEs and update only affected main README/model/user guidance.
+- [x] Pass 46 focused offline Pi checks covering all three models, approval,
+  cancellation, installed-model reuse and the loader's default refusal to download.
+  Ruff passed. No model downloads or live inference were used.

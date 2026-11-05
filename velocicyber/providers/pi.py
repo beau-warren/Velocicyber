@@ -40,11 +40,14 @@ class PiModelManager:
         path.mkdir(mode=0o700, parents=True, exist_ok=True)
         return path
 
-    def installed(self):
-        marker = self.folder / "installed.json"
+    def installed(self, repo=None):
+        # Inspect another selection without unloading or changing the current model.
+        repo = repo or self.repo
+        folder = self.settings.runtime / PI_PROFILES[repo].directory
+        marker = folder / "installed.json"
         if not marker.exists():
             return None
-        cfg = json.loads((self.settings.root / PI_PROFILES[self.repo].lock_file).read_text())
+        cfg = json.loads((self.settings.root / PI_PROFILES[repo].lock_file).read_text())
         saved = json.loads(marker.read_text())
         # Serving-only changes reuse verified weights and the pinned executable.
         # Return the current serving config while preserving the install receipt.
@@ -55,7 +58,7 @@ class PiModelManager:
         ):
             return None
         model, binary = Path(saved["model_path"]), Path(saved["binary_path"])
-        if not all(p.resolve().is_relative_to(self.folder.resolve()) for p in (model, binary)):
+        if not all(p.resolve().is_relative_to(folder.resolve()) for p in (model, binary)):
             raise ValueError("Pi model installation paths must stay inside this project.")
         if (
             not model.is_file()
@@ -67,7 +70,7 @@ class PiModelManager:
         if cfg.get("conversion"):
             from velocicyber.models.pi_artifacts import valid_receipt
 
-            if not valid_receipt(cfg, self.folder, saved, verify_model=False):
+            if not valid_receipt(cfg, folder, saved, verify_model=False):
                 return None
         return {**saved, **cfg}
 
@@ -205,7 +208,7 @@ class PiModelManager:
             + template_args
         )
 
-    async def start(self, notify=lambda message: None):
+    async def start(self, notify=lambda message: None, *, allow_download=False):
         if local_sentinel_active(self.state):
             raise RuntimeError("Turn /sentinel OFF before loading a Pi coding model.")
         if self.settings.pi_model not in PI_PROFILES:
@@ -236,6 +239,10 @@ class PiModelManager:
                     ) from None
             cfg = self.installed()
             if cfg is None:
+                if not allow_download:
+                    raise RuntimeError(
+                        "Pi model download needs confirmation. Select it in /local to approve."
+                    )
                 await self.install(notify)
                 cfg = self.installed()
             if cfg is None:

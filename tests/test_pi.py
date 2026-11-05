@@ -195,7 +195,9 @@ async def test_failed_pi_start_does_not_fall_back_to_api(settings, monkeypatch):
     notifications = []
     monkeypatch.setattr(app, "notify", lambda message, **kw: notifications.append(message))
 
-    async def fail(notify):
+    monkeypatch.setattr(app.pi, "installed", lambda repo=None: {"installed": True})
+
+    async def fail(notify, *, allow_download=False):
         raise RuntimeError("Fixture: insufficient RAM")
 
     monkeypatch.setattr(app.pi, "start", fail)
@@ -218,7 +220,9 @@ async def test_pi_loading_progress_is_inline_in_automatic_new_session(settings, 
     monkeypatch.setattr(app, "notify", lambda message, **kw: notifications.append(message))
     monkeypatch.setattr(app.pi, "install_status", lambda: "Downloaded; ready to load")
 
-    async def start(notify):
+    monkeypatch.setattr(app.pi, "installed", lambda repo=None: {"installed": True})
+
+    async def start(notify, *, allow_download=False):
         notify("Loading the Pi model into memory…")
         started.set()
         await finish.wait()

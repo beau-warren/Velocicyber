@@ -97,7 +97,8 @@ First launch asks for your Lambda, Adverserial.ai and Hugging Face credentials,
 and separate main-agent and sentinel dataset names. Each optional item can be
 skipped. Keys stay in your local `.env`; other settings go in `Modules.txt`.
 Collection and uploads start **OFF**. No GPU model is selected automatically, and
-model weights are downloaded only through an explicit setup/model selection.
+model weights download only after explicit setup consent or a download confirmation
+when selecting an uninstalled Pi model in `/local`.
 Setup also offers Lambda SSH key-name and private-key selection/import; see [SSH setup](ssh-keys/README.md).
 On Linux desktops, setup also offers an optional [desktop launcher and neon V icon](docs/installation.md#desktop-shortcut); press Enter to skip.
 

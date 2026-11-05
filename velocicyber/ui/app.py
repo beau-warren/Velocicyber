@@ -370,7 +370,7 @@ class VelocicyberApp(App):
             notice.add_class("has-message")
 
     def animate(self):
-        if not self.query("#dashboard"):
+        if not self.query("#dashboard") or not self.query("#home-update-status"):
             return  # A timer can already be queued while the screen is unmounting.
         self.frame += 1
         self.update_header_layout()
@@ -877,7 +877,7 @@ class VelocicyberApp(App):
                 lambda choice: self.local_model_choice(repo, choice),
             )
 
-    def select_local_model(self, repo):
+    def select_local_model(self, repo, *, download_approved=False):
         if self.busy or self.pi_busy or self.sentinel_busy:
             self.say("Wait for the current task or model operation to finish.")
             return
@@ -887,6 +887,24 @@ class VelocicyberApp(App):
             if local_sentinel_active(self.state) or self.sentinel_busy:
                 self.say("Turn /sentinel OFF before loading a Pi coding model.")
                 return
+            if not self.demo and not download_approved:
+                try:
+                    installed = self.pi.installed(repo)
+                except (OSError, ValueError, KeyError) as exc:
+                    self.say("Could not validate the Pi model installation: " + str(exc))
+                    return
+                if installed is None:
+                    self.push_screen(
+                        Menu(
+                            repo + "\nThis model is not downloaded yet onto this local device. "
+                            "Would you like to download it now?",
+                            [(False, "No — Cancel"), (True, "Yes — Download now")],
+                            id="pi-download-confirm",
+                        ),
+                        lambda approved: self.select_local_model(repo, download_approved=True)
+                        if approved is True else None,
+                    )
+                    return
             if repo != self.settings.pi_model:
                 self.state.pi_ready = False
                 self.settings.options["PI_LOCAL_MODEL"] = repo
@@ -897,7 +915,7 @@ class VelocicyberApp(App):
             if not self.conversation:
                 self.command("new")
             self.say(PI_MODEL_NOTICE)
-            self.pi_operation("start")
+            self.pi_operation("start", allow_download=download_approved)
         elif repo == "gpu-controls":
             self.menu_selected("gpu")
         elif repo:
@@ -922,7 +940,7 @@ class VelocicyberApp(App):
                 self.gpu_operation("load", repo)
 
     @work(group="pi", exclusive=True)
-    async def pi_operation(self, operation):
+    async def pi_operation(self, operation, *, allow_download=False):
         self.pi_busy = True
         try:
             if operation == "stop":
@@ -942,7 +960,7 @@ class VelocicyberApp(App):
                     self.state.pi_stage = "Ready"
                     self.state.active_provider = self.state.private_target = "pi"
                 else:
-                    await self.pi.start(self.say)
+                    await self.pi.start(self.say, allow_download=allow_download)
                 if self.state.active_provider == "pi" and not self.engine.running:
                     self.engine.new_task()
         except Exception as exc:

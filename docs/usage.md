@@ -8,6 +8,8 @@
 
 - `/api`: select CyberKimi or CyberGLM.
 - `/local`: select a model, then confirm it or view its hardware/download details.
+  An uninstalled Pi model asks for download approval; No or Esc cancels without
+  changing your current model or session.
 - `/gpu`: choose available GPU capacity and review price before launching a paid instance.
 - `/new` and `/resume`: start or resume a conversation.
 - `/sandbox`: choose workspace restrictions or access using your Linux account permissions.

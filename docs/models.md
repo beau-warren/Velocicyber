@@ -217,7 +217,10 @@ Model weights are **not included in Git**. First-time setup and `/setup` offer o
 
 **No GPUs Needed! Can run locally without GPUs.** These profiles target the
 16 GB Raspberry Pi 5. They do not launch Lambda instances or change GPU status.
-Switching between them unloads the previous Pi model first.
+Selecting a Pi model that is not installed asks whether to download it first.
+**Yes — Download now** installs and loads it; **No — Cancel** or **Esc** preserves
+your current model and session. Installed models load without this extra prompt.
+Switching between them unloads the previous Pi model after any download approval.
 
 Use one Pi coding model at a time. A Pi coding model and a Pi sentinel cannot run concurrently in this harness. Pair a local sentinel with an API or Lambda coding model instead.
 
