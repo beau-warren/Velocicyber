@@ -2,6 +2,9 @@
 
 # ![BugTrace's Gemma 4 template](../assets/docs/headings/h1-bugtraces-gemma-4-template.svg)
 
+**For the BugTrace model only.** This template applies only to the BugTrace
+APEX Mini Raspberry Pi model. Other models in Velocicyber do not use this file.
+
 The BugTrace APEX Mini Pi profile loads [gemma4.jinja](gemma4.jinja) using
 `--chat-template-file`. This vendored template comes from
 `models/templates/google-gemma-4-31B-it.jinja` at the pinned ik_llama.cpp revision
