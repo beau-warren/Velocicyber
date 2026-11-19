@@ -15,18 +15,72 @@
 
 ## ![Runtime boundaries](assets/docs/headings/h2-runtime-boundaries.svg)
 
-The engine's workspace sandbox is the default. It restricts writes and network
-access; it does not isolate readable files elsewhere in your Linux account.
-Keeping a secret outside the workspace alone does not prevent the agent from
-reading it. Use a separate restricted account or isolated environment for tasks
-that must not access your personal files. Opening the sandbox gives executed
-code your Linux account's permissions. Commands run on the local machine even
-when model inference runs through an API or Lambda. The reactive sentinel can
-be late, wrong, or unavailable and does not undo completed actions.
+Inference privacy and local execution permissions protect different boundaries.
+Commands run on the local machine even when inference runs through an API or
+Lambda. The Lambda model-serving container does not contain those local commands.
+
+<a name="inference-privacy"></a>
+
+### ![Inference privacy](assets/docs/headings/h3-inference-privacy.svg)
+
+| Inference location | Privacy benefit and boundary |
+| --- | --- |
+| Pi | Model inference can keep inputs on the device. Network tools, local logs and optional dataset uploads are separate data paths. |
+| Self-managed Lambda | Users control the serving application and its logging. Inference inputs leave the Pi, and the deployment still relies on cloud infrastructure; it does not automatically provide confidential computing. |
+| Adverserial confidential API | The [pinned SDK](https://github.com/AdverserialAI/confidential-sdk) verifies attestation and workload evidence and uses encrypted transport. Protection depends on its documented hardware and verification assumptions. |
+
+Confidential inference does not imply universal zero retention. Adverserial's
+[privacy policy](https://adverserial.ai/privacy) describes temporary processing
+and caches, account-linked usage records and separate retention lifecycles.
+Do not bypass the confidential client's attestation or TLS checks to resolve
+availability errors.
+
+<a name="current-safeguards"></a>
+
+### ![Current safeguards](assets/docs/headings/h3-current-safeguards.svg)
+
+- **Default execution restrictions:** closed mode uses the engine's enforced
+  restrictions on file writes and tool network access, independently of whether
+  the model follows instructions.
+- **Credential handling:** long-lived provider credentials are kept out of the
+  execution engine's inherited environment. Setup saves private configuration
+  with owner-only permissions; private files are excluded from Git.
+- **Scope monitoring:** the optional sentinel reviews executable actions against
+  `SCOPE/SCOPE.MD` asynchronously and can interrupt the current task.
+- **Controlled updates and collection:** managed engine updates require approval
+  and are staged and compatibility-tested before activation. Collection and
+  dataset uploads have user-controlled permissions and default to off in new
+  installations.
+
+<a name="known-limitations"></a>
+
+### ![Known limitations](assets/docs/headings/h3-known-limitations.svg)
+
+- **Personal-file isolation is incomplete.** Closed mode does not hide files
+  readable elsewhere in the user's Linux account, including personal documents
+  or credentials. Keeping a secret outside the workspace or setting `0600` does
+  not prevent access by agent tools running under that same account.
+- **Open mode grants account-level access.** Executed commands receive the user's
+  Linux permissions. The harness does not require human approval before every
+  command. Inference location does not prevent harmful local actions.
+- **The sentinel cannot guarantee prevention.** Reviews can be incorrect, delayed
+  or unavailable. Actions may finish before a verdict, and stopping a task does
+  not undo completed changes. `SCOPE.MD` does not itself create an enforced
+  filesystem or network allowlist.
+- **Tool output can disclose sensitive information.** Readable data can enter
+  model context and conversation logs; remote inference receives the context
+  sent to it. Enabled dataset uploads create another destination. Sanitization
+  cannot guarantee removal of every secret; see [Data](#data).
+
+Use a separate restricted account or isolated execution environment for tasks
+that must not access personal files. Compatibility tests and artifact checksums
+do not establish that model behavior is benign or that every attack is contained;
+see [model supply-chain risk](#model-supply-chain-and-backdoor-risk).
 
 Local API/Pi inference endpoints use loopback listeners. The Lambda inference port is published to host loopback and forwarded over SSH; listeners inside its container are not a public host binding. Users control their own cloud firewall rules. SSH uses first-use trust (`accept-new`) and persists known host keys; out-of-band fingerprint validation is still recommended.
 
-The Adverserial confidential client retains its attestation and TLS checks. Do not bypass them to resolve availability errors. TLS, SSH, SDK, container and engine dependencies still require ongoing updates and review.
+TLS, SSH, SDK, container and engine dependencies still require ongoing updates
+and review.
 
 <a name="data"></a>
 
@@ -35,8 +89,6 @@ The Adverserial confidential client retains its attestation and TLS checks. Do n
 Raw task logs can contain code, prompts, tool outputs, scopes, personal paths or secrets. Sanitization of derived records cannot prove confidentiality. Enable collection/uploads only for material you are permitted to store and train on. Existing Hugging Face datasets keep their current visibility; setup does not make an existing public dataset private. Confirm visibility in your account.
 
 A confirmed upload permits cleanup of its local collected records. Conversation history and other runtime diagnostics have separate retention. Sentinel predictions need independent review before use as supervised labels.
-
-Keep in mind: Lambda Cloud has the authority to monitor traffic coming in and coming out of their instances.  100% total privacy is not guaranteed when using Lambda for running Huggingface model inference.
 
 <a name="provider-privacy-documentation"></a>
 

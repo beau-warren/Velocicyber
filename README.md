@@ -60,6 +60,21 @@ and each model's **More Details** menu before choosing hardware.
 - Check harness and engine releases on launch. Optionally install tested repo
   updates automatically before opening the UI; engine upgrades remain manual.
 
+<a name="security-and-privacy"></a>
+
+## ![Security and privacy](assets/docs/headings/h2-security-and-privacy.svg)
+
+Velocicyber supports local, self-managed cloud, and verified confidential API
+inference, with default execution restrictions and optional scope monitoring.
+
+Commands execute on your local machine regardless of where inference runs.
+Closed mode restricts writes and network access but does not fully isolate
+personal files. Open mode grants access using your Linux account's permissions.
+The sentinel is reactive and cannot guarantee prevention of harmful actions.
+
+See [Security boundaries](SECURITY.md#runtime-boundaries) for current protections,
+privacy considerations, and known limitations.
+
 <a name="current-model-options"></a>
 
 ## ![Current model options](assets/docs/headings/h2-current-model-options.svg)
@@ -195,6 +210,7 @@ No license for the original harness code is currently included in this repositor
 | [Installation](docs/installation.md) | curl download, first-run setup, credentials and manual configuration |
 | [Model setup](docs/models.md) | Lambda SSH setup, GPU profiles and optional Pi downloads |
 | [User guide](docs/usage.md) | Sessions, queued prompts, data collection and sentinel behavior |
+| [Security boundaries](SECURITY.md) | Inference privacy, execution safeguards, credentials and known limitations |
 | [Sources and upstream references](docs/sources.md) | Provider documentation, model cards, runtime versions and licenses |
 
 <a name="repository-layout"></a>
