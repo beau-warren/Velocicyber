@@ -199,7 +199,8 @@ enable the option in `/update` (OFF by default). Engine upgrades always need man
 approval. Inspect `/updates-info` when a check fails. See
 [updating and rollback](docs/installation.md#updates-and-rollback).
 See [security boundaries](SECURITY.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
-No license for the original harness code is currently included in this repository.
+Velocicyber's original code is licensed under the [Apache License 2.0](LICENSE).
+Third-party components and model weights retain their own licenses.
 
 <a name="guides"></a>
 

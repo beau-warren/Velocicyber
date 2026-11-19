@@ -6,6 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "velocicyber"
 version = "0.1.0"
 description = "Velocicyber: a modular Raspberry Pi terminal coding harness"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md", "chat-templates/LICENSE.ik_llama.cpp"]
 requires-python = ">=3.11"
 dependencies = ["textual>=6.12,<7", "httpx>=0.28,<1", "huggingface-hub>=1.32,<2"]
 

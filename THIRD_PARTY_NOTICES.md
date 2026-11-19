@@ -20,8 +20,10 @@ The Gemma chat template has its own attribution and retained license in
 The Adverserial confidential SDK is downloaded separately from its pinned
 upstream commit and retains its upstream notices.
 
-No license for the original harness code is currently included in this repository.
-This release does not grant rights to third-party weights or trademarks.
+Velocicyber's original code is licensed under the [Apache License 2.0](LICENSE);
+see [NOTICE](NOTICE) for attribution. Separately licensed third-party material
+retains its own terms. This release does not grant rights to third-party weights
+or trademarks.
 
 Documentation, source repositories and recorded versions are indexed in
 [Sources and upstream references](docs/sources.md).

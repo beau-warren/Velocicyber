@@ -77,6 +77,8 @@ revision for its download manifest; the serving lock pins the runtime software.
 
 ## ![Licenses and attribution](../assets/docs/headings/h2-licenses-and-attribution.svg)
 
+Velocicyber's original code is licensed under the [Apache License 2.0](../LICENSE).
+
 See [third-party notices](../THIRD_PARTY_NOTICES.md) and the
 [BugTrace chat-template license](../chat-templates/README.md). Model weights are
 not bundled with Velocicyber. This index does not grant redistribution rights;
