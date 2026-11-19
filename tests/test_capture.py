@@ -626,13 +626,18 @@ def test_encrypted_gateway_error_is_readable_without_changing_raw_capture():
         assert bytes.fromhex("".join(proxy.events[-1]["response_chunks"])) == body
 
 
-def test_cyberglm_output_budget(settings):
+@pytest.mark.parametrize("alias,key", [
+    ("cyberglm", "CYBERGLM_MAX_OUTPUT_TOKENS"),
+    ("cyberseek", "CYBERSEEK_MAX_OUTPUT_TOKENS"),
+    ("adverserial/cyberseek", "CYBERSEEK_MAX_OUTPUT_TOKENS"),
+])
+def test_api_output_budget(settings, alias, key):
     assert settings.api_output_limit() is None
-    settings.api_model = "cyberglm"
+    settings.api_model = alias
     assert settings.api_output_limit() == 16384
-    settings.options["CYBERGLM_MAX_OUTPUT_TOKENS"] = "8192"
+    settings.options[key] = "8192"
     assert settings.api_output_limit() == 8192
     for value in ("0", "65537", "not-a-number"):
-        settings.options["CYBERGLM_MAX_OUTPUT_TOKENS"] = value
+        settings.options[key] = value
         with pytest.raises(ValueError, match="1 to 65536"):
             settings.api_output_limit()

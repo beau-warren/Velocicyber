@@ -198,3 +198,14 @@ def test_optional_desktop_failure_does_not_block_setup(tmp_path, monkeypatch, ca
     assert (tmp_path / ".runtime" / onboarding.MARKER).is_file()
     output = capsys.readouterr().out
     assert "could not be created" in output and "setup to retry later" in output
+
+
+@pytest.mark.parametrize("answer,expected", [("yes", True), ("n", False)])
+def test_existing_api_client_can_be_refreshed_only_with_consent(tmp_path, monkeypatch, answer, expected):
+    folder = tmp_path / ".runtime/adverserial-confidential"
+    folder.mkdir(parents=True)
+    (folder / "source.json").write_text('{"commit":"old"}')
+    calls = []
+    monkeypatch.setattr(onboarding, "install_component", lambda *args: calls.append(args))
+    setup(tmp_path, ("", "", "n", answer, ""), ("", "api-fixture-key", ""))
+    assert calls == ([(tmp_path, "install_api_gateway.py")] if expected else [])

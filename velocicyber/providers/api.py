@@ -25,6 +25,10 @@ class ConfidentialGateway:
                 "Adverserial now requires confidential inference. Run "
                 ".venv/bin/python scripts/install/install_api_gateway.py first."
             )
+        installed = json.loads((folder / "source.json").read_text())
+        required = json.loads((self.settings.root / "config/locks/api-client.lock.json").read_text())
+        if installed.get("commit") != required["commit"]:
+            raise RuntimeError("Refresh the Adverserial confidential API client through /setup before using API models.")
         env = {k: os.environ[k] for k in ("PATH", "HOME", "LANG") if k in os.environ}
         # No billing key in argv, the environment, or the gateway's logs.
         with (folder / "gateway.log").open("ab") as log:

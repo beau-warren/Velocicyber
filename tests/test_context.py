@@ -33,12 +33,21 @@ def test_bad_context_profile_fails_before_launch(settings, value):
         settings.local_context_window()
 
 
-def test_cyberglm_uses_its_own_context_budget_and_name(settings):
-    settings.api_model = "cyberglm"
+@pytest.mark.parametrize("alias,name,model,window", [
+    ("cyberglm", "CyberGLM", "lordx64/cyberglm", 131072),
+    ("cyberseek", "CyberSeek", "adverserial/cyberseek", 1048576),
+])
+def test_api_models_use_their_own_context_budget_and_name(settings, alias, name, model, window):
+    settings.api_model = alias
     engine = Engine(settings, State())
-    assert settings.api_model_name == "CyberGLM"
-    assert engine.context_budget().window == 131072
-    assert engine.selected_model == "lordx64/cyberglm"
+    assert settings.api_model_name == name
+    assert engine.context_budget().window == window
+    assert engine.selected_model == model
+    settings.api_model = model
+    assert settings.api_model_name == name
+    assert engine.context_budget().window == window
+    assert settings.is_api_model(alias)
+    assert settings.is_api_model(model)
     assert settings.is_api_model("lordx64/cyberkimi")
     assert settings.is_api_model("cyberglm")
     settings.api_model = "lordx64/cyberkimi"

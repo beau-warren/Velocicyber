@@ -6,7 +6,7 @@
 
 ## ![First session](../assets/docs/headings/h2-first-session.svg)
 
-- `/api`: select CyberKimi or CyberGLM.
+- `/api`: select CyberKimi, CyberGLM or CyberSeek.
 - `/local`: select a model, then confirm it or view its hardware/download details.
   An uninstalled Pi model asks for download approval; No or Esc cancels without
   changing your current model or session.

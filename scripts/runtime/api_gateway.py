@@ -7,12 +7,51 @@ import signal
 import sys
 from pathlib import Path
 
-from adverserial_gateway.config import Config
-from adverserial_gateway.core import Dispatcher, VerificationFailed
-from adverserial_gateway.server import BoundedThreadingHTTPServer, Handler
+SUPPORTED_MODELS = frozenset({"lordx64/cyberglm", "lordx64/cyberkimi", "adverserial/cyberseek"})
+POLICY_BINDINGS = (
+    ("model_digest", "model_artifact_digest"),
+    ("runtime_digest", "runtime_image_digest"),
+    ("compose_digest", "deployment_configuration_digest"),
+    ("tls_spki_sha256", "tls_spki_sha256"),
+)
+
+
+def policy_dispatcher(core, policy):
+    """Adapt the SDK's model allowlist; retain every attestation/transport check."""
+    if (policy.get("status") != "active" or not policy.get("receipt_keys")
+            or policy.get("model_id") not in SUPPORTED_MODELS
+            or not all(policy.get(key) for _, key in POLICY_BINDINGS)):
+        raise ValueError("No complete active confidential policy for a supported model.")
+    # The pinned SDK predates the CyberSeek ID. Add only the exact model from
+    # an approved policy, not arbitrary names or aliases for a different model.
+    core.CANONICAL_MODELS = core.CANONICAL_MODELS | {policy["model_id"]}
+
+    class PolicyDispatcher(core.Dispatcher):
+        def proof_for(self, model):
+            if model != policy["model_id"]:
+                raise core.VerificationFailed(
+                    "No active installed confidential policy for this model. "
+                    "Refresh the client through /setup; provider availability still applies."
+                )
+            proof = super().proof_for(model)
+            if proof.model_id != model or proof.dev_mode:
+                raise core.VerificationFailed("Confidential proof has the wrong model or dev-mode evidence.")
+            for field, key in POLICY_BINDINGS:
+                if getattr(proof, field) != policy[key]:
+                    raise core.VerificationFailed(
+                        "Confidential endpoint differs from the installed production policy; "
+                        "refresh the client through /setup."
+                    )
+            return proof
+
+    return PolicyDispatcher
 
 
 def main():
+    from adverserial_gateway import core
+    from adverserial_gateway.config import Config
+    from adverserial_gateway.server import BoundedThreadingHTTPServer, Handler
+
     parent = os.getppid()
     ctypes.CDLL(None).prctl(1, signal.SIGTERM)
     if os.getppid() != parent:
@@ -30,23 +69,7 @@ def main():
         "ADVERSERIAL_HARDWARE_VERIFIER_COMMAND": str(verifier),
     })
 
-    class PolicyDispatcher(Dispatcher):
-        def proof_for(self, model):
-            if model != policy["model_id"]:
-                raise VerificationFailed("No active installed confidential policy for this model.")
-            proof = super().proof_for(model)
-            for field, key in (("model_digest", "model_artifact_digest"),
-                               ("runtime_digest", "runtime_image_digest"),
-                               ("compose_digest", "deployment_configuration_digest"),
-                               ("tls_spki_sha256", "tls_spki_sha256")):
-                if not policy.get(key) or getattr(proof, field) != policy[key]:
-                    raise VerificationFailed(
-                        "Confidential endpoint differs from the installed production policy; "
-                        "refresh with scripts/install/install_api_gateway.py."
-                    )
-            return proof
-
-    Handler.dispatcher = PolicyDispatcher(config)
+    Handler.dispatcher = policy_dispatcher(core, policy)(config)
     server = BoundedThreadingHTTPServer(("127.0.0.1", 0), Handler)
     server.logger = lambda *_: None
     print(json.dumps({"port": server.server_port}), flush=True)

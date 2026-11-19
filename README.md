@@ -43,7 +43,7 @@ and each model's **More Details** menu before choosing hardware.
 
 ## ![Capabilities](assets/docs/headings/h2-capabilities.svg)
 
-- Use CyberKimi or CyberGLM through the Adverserial.ai confidential API client.
+- Use CyberKimi, CyberGLM or CyberSeek through the Adverserial.ai confidential API client.
 - Select a supported Lambda GPU model, review compatible capacity and hourly
   pricing, then approve instance launch and model deployment. Upload progress
   refreshes every 60 seconds as download events arrive; completion appears immediately.
@@ -66,7 +66,7 @@ and each model's **More Details** menu before choosing hardware.
 
 | Role | Included choices |
 | --- | --- |
-| API coding | CyberKimi; CyberGLM |
+| API coding | CyberKimi; CyberGLM; CyberSeek |
 | Raspberry Pi CPU coding | Qwen3.5-35B-A3B IQK; BugTrace APEX Mini; Blackfrost LFM3 1.7B Q8 |
 | Lambda GPU coding | M.O.G.-SEC 27B; OrcaCyber Nano; Flint Mix-24G; CYBER-FROST 3.8 BF16; GLM-5.3 Flash EXL3/TensorFold; SAGE-A1P5 BF16 V2 |
 | Local sentinel | Qwen3.5-35B-A3B IQK; Granite Guardian 4.1 8B Q4 |

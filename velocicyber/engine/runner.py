@@ -399,9 +399,9 @@ class Engine:
             key,
             on_progress=lambda event: loop.call_soon_threadsafe(on_event, event),
             read_timeout=self.response_timeout(),
-            request_usage=selected in {"local", "pi"} or model == "lordx64/cyberglm",
+            request_usage=selected in {"local", "pi"} or model in {"lordx64/cyberglm", "adverserial/cyberseek"},
             default_max_tokens=self.settings.api_output_limit() if selected == "api" else None,
-            reject_malformed_tool_history=selected == "api" and model == "lordx64/cyberglm",
+            reject_malformed_tool_history=selected == "api" and model in {"lordx64/cyberglm", "adverserial/cyberseek"},
         ) as proxy:
             environment["VELOCICYBER_BRIDGE_TOKEN"] = proxy.local_key
             try:

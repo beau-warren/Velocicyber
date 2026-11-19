@@ -575,6 +575,8 @@ async def test_real_engine_provider_capture_and_opt_out(settings, reply_kind, na
     [
         "lordx64/cyberkimi",
         "cyberglm",
+        "cyberseek",
+        "adverserial/cyberseek",
         "example-org/coding-model",
         "terrorswift/BugTraceAI-Apex-G4-26B-APEX-GGUF",
     ],

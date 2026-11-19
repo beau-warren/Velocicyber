@@ -14,13 +14,25 @@ Choose `/local` → **More Details** for the matching in-app requirements.
 | --- | --- | --- |
 | CyberKimi | `lordx64/cyberkimi` | `/api` → **CyberKimi** |
 | CyberGLM | `lordx64/cyberglm` | `/api` → **CyberGLM** |
+| CyberSeek | `adverserial/cyberseek` | `/api` → **CyberSeek** |
 
-Both use the Adverserial.ai confidential API client. Supply your own
+All use the Adverserial.ai confidential API client. Supply your own
 `ADVERSARIAL_API` key during [setup](installation.md#first-run-setup) or in `.env`;
 the client requires Node.js/npm and its separately installed SDK. API coding
 requires no Lambda instance or local model weights. Provider availability,
 account access and usage charges still apply. These are coding-model choices;
 the sentinel menu contains local models only.
+
+[CyberSeek](https://adverserial.ai/cyberseek) uses the provider's currently served
+**1,048,576-token context** and a **16,384-token maximum per response** in this
+harness. Override the latter with `CYBERSEEK_MAX_OUTPUT_TOKENS` (1–65,536) in
+`Modules.txt`; actual provider/account limits still apply. This context setting
+comes from the provider's `/v1/models` catalog, not a long-context validation run.
+A streamed file-creation/read-back task passed through the real engine and
+verified confidential client on 2026-11-19; long-context runs remain unvalidated.
+Existing installations must refresh the confidential client through `/setup`
+before using CyberSeek. A model requires a matching active production policy;
+an unavailable model is never silently routed to another one.
 
 <a name="lambda-gpu-setup"></a>
 

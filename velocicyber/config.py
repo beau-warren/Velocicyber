@@ -12,6 +12,7 @@ from velocicyber.models.pi_profiles import PI_PROFILES
 API_MODELS = {
     "cyberkimi": ("CyberKimi", "lordx64/cyberkimi", 32768),
     "cyberglm": ("CyberGLM", "lordx64/cyberglm", 131072),
+    "cyberseek": ("CyberSeek", "adverserial/cyberseek", 1048576),
 }
 
 
@@ -140,9 +141,12 @@ class Settings:
         return seconds
 
     def api_output_limit(self):
-        if self.api_profile[1] != "lordx64/cyberglm":
+        key = {
+            "lordx64/cyberglm": "CYBERGLM_MAX_OUTPUT_TOKENS",
+            "adverserial/cyberseek": "CYBERSEEK_MAX_OUTPUT_TOKENS",
+        }.get(self.api_profile[1])
+        if key is None:
             return None
-        key = "CYBERGLM_MAX_OUTPUT_TOKENS"
         try:
             value = int(self.options.get(key, "16384"))
         except ValueError:

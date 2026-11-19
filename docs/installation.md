@@ -86,6 +86,8 @@ Use `/setup` in the slash/backslash menu to revisit skipped items. It asks befor
 ending the session, stopping local models and terminating its tracked GPU, then
 opens hidden terminal prompts outside the chat. Saved conversations remain
 available through `/resume`. Enter keeps existing values or skips missing ones.
+Setup also offers to refresh an existing Adverserial API client and its verification
+policy; confirm this after a client update or provider policy rotation.
 Setup returns to the main menu with the saved settings loaded. Other harness
 windows must be closed while configuring it; demo mode cannot change settings.
 

@@ -816,6 +816,7 @@ async def test_api_picker_requires_explicit_model_selection(settings):
         assert app.screen.options == [
             ("cyberkimi", "CyberKimi — Adverserial.ai"),
             ("cyberglm", "CyberGLM — Adverserial.ai"),
+            ("cyberseek", "CyberSeek — Adverserial.ai"),
         ]
         assert app.state.active_provider == "local"
         await pilot.press("escape")
@@ -1091,7 +1092,7 @@ async def test_all_submenus_filter_and_select_from_keyboard(settings):
         assert app.state.gpu_status == GPUStatus.RUNNING
         await pilot.press("backslash", "a", "p", "i", "enter")
         await pilot.press(*"cyber")
-        assert app.screen.query_one(OptionList).option_count == 2
+        assert app.screen.query_one(OptionList).option_count == 3
         await pilot.press(*"kimi")
         assert app.screen.query_one(OptionList).option_count == 1
         await pilot.press("enter")
@@ -1266,7 +1267,11 @@ async def test_failed_startup_refresh_leaves_models_visible(settings, monkeypatc
         assert calls == ["refresh"]
 
 
-async def test_cyberglm_picker_filters_routes_and_updates_active_model(settings):
+@pytest.mark.parametrize("query,model,name", [
+    ("glm", "lordx64/cyberglm", "CyberGLM"),
+    ("seek", "adverserial/cyberseek", "CyberSeek"),
+])
+async def test_api_picker_filters_routes_and_updates_active_model(settings, query, model, name):
     app = VelocicyberApp(settings, demo=True)
     app.state.gpu_status = GPUStatus.RUNNING
     app.state.model_ready = True
@@ -1274,18 +1279,18 @@ async def test_cyberglm_picker_filters_routes_and_updates_active_model(settings)
     async with app.run_test(size=(100, 30)) as pilot:
         app.menu_selected("api")
         await pilot.pause()
-        app.screen.query_one(Input).value = "glm"
+        app.screen.query_one(Input).value = query
         await pilot.pause()
         await pilot.press("enter")
-        assert settings.api_model == "lordx64/cyberglm"
-        assert app.engine.selected_model == "lordx64/cyberglm"
+        assert settings.api_model == model
+        assert app.engine.selected_model == model
         assert app.state.active_provider == "api"
         assert app.state.gpu_status == GPUStatus.RUNNING and app.state.model_ready
         app.show_conversation()
-        assert "CyberGLM" in app.query_one("#log").border_title
+        assert name in app.query_one("#log").border_title
         display = app.query_one("#dashboard", Static).render()
         assert any(
-            "CyberGLM" in text and style.foreground.hex == "#39FF14"
+            name in text and style.foreground.hex == "#39FF14"
             for text, style in display.render()
         )
         app.state.api_health = "ok"

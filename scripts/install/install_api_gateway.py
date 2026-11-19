@@ -7,7 +7,8 @@ import tarfile
 import urllib.request
 from pathlib import Path
 
-COMMIT = "351aa8b7263a935b9c0dd36a9d857b1966d4e195"
+ROOT = Path(__file__).resolve().parents[2]
+COMMIT = json.loads((ROOT / "config/locks/api-client.lock.json").read_text())["commit"]
 
 
 def main():

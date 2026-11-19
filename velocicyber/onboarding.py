@@ -175,9 +175,8 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
         engine_missing = True
     if engine_missing and confirm("Download and install the pinned execution engine (about 234 MB)?", input_fn):
         install_component(root, "install_engine.py")
-    gateway = settings.runtime / "adverserial-confidential" / "source.json"
-    if settings.secrets.get("ADVERSARIAL_API") and not gateway.is_file():
-        if confirm("Install the Adverserial confidential API client? Requires Node.js/npm and network access", input_fn):
+    if settings.secrets.get("ADVERSARIAL_API"):
+        if confirm("Install or refresh the Adverserial confidential API client? Requires Node.js/npm and network access", input_fn):
             install_component(root, "install_api_gateway.py")
     print("\nOptional Pi 5 models (16 GB RAM, Linux ARM64; one coding model at a time):")
     print("1: Qwen3.5 IQK — 12.23 GB; 2: BugTrace APEX Mini — 12.26 GB; 3: Qwen + BugTrace.")
