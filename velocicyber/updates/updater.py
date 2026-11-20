@@ -137,7 +137,9 @@ class SourceUpdater:
         except RuntimeError:
             pass
         report = run / "tests.xml"
-        self.notify("Testing the staged harness with offline fixtures; the active source is unchanged…")
+        self.notify(
+            "Testing the staged harness with offline fixtures… This may take a few minutes."
+        )
         self.command([str(python), "-m", "pytest", "-p", "pytest_asyncio.plugin", "-q",
                       "--basetemp=" + str(run / "fixtures"), "--junitxml=" + str(report)],
                      source, run / "tests.log", env=env)

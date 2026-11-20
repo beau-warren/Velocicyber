@@ -207,8 +207,8 @@ both according to the check result, shows the targets and asks for confirmation.
 Proceeding closes the session, stops Pi inference and terminates its managed GPU.
 Engine updates keep their existing compatibility gate and conversation backup.
 Harness updates stage the exact source revision and run its offline test suite
-before changing the active files. Changed Python dependencies are built and tested
-in a separate environment. The dependency lock includes the Python build backend;
+before changing the active files. This test phase may take a few minutes. Changed
+Python dependencies are built and tested in a separate environment. The dependency lock includes the Python build backend;
 staging checks the same build mode used during activation. If an older update
 rolled back with `Cannot import 'setuptools.build_meta'`, retry against the latest
 repo revision: it supplies the missing dependency through the existing updater.
