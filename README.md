@@ -35,9 +35,9 @@ and security research. It pairs one coding agent with a human operator and an
 optional local scope observer. The primary target is a **Raspberry Pi 5 with
 16 GB RAM running 64-bit Linux**.
 
-**Beta and under active development.** Model availability and live
-validation vary by provider and serving profile. See [model setup](docs/models.md)
-and each model's **More Details** menu before choosing hardware.
+Model availability and live validation vary by provider and serving profile.
+See [model setup](docs/models.md) and each model's **More Details** menu before
+choosing hardware.
 
 <a name="capabilities"></a>
 

@@ -154,7 +154,7 @@ reactive sentinel is not a guarantee that a backdoor will be detected or stopped
 
 ## ![Reporting and release status](assets/docs/headings/h2-reporting-and-release-status.svg)
 
-This is beta software. Report suspected issues privately to the repository
-owner; do not put credentials or private task logs in an issue. Automated checks
-do not establish the absence of vulnerabilities. See [model setup](docs/models.md)
+Report suspected issues privately to the repository owner; do not put credentials
+or private task logs in an issue. Automated checks do not establish the absence of
+vulnerabilities. See [model setup](docs/models.md)
 for the validation limits of each serving profile.
