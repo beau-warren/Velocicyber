@@ -51,7 +51,7 @@ and each model's **More Details** menu before choosing hardware.
   and serving runtime.
 - Start and resume conversations, queue follow-up prompts, interrupt work, and
   receive notices when context compaction occurs.
-- Choose the engine's workspace sandbox or open filesystem access using your
+- Choose an isolated workspace or open filesystem access using your
   Linux account's permissions.
 - Use a local sentinel to review executable tool actions against `SCOPE/SCOPE.MD`
   asynchronously and stop a task after a possible violation is detected.
@@ -70,8 +70,10 @@ Remote API endpoints require HTTPS; local inference and SSH tunnels retain
 loopback HTTP support.
 
 Commands execute on your local machine regardless of where inference runs.
-Closed mode restricts writes and network access but does not fully isolate
-personal files. Open mode grants access using your Linux account's permissions.
+Closed mode uses Linux Bubblewrap to hide personal files and harness credentials
+from the engine and its tools, alongside the engine's write/network restrictions.
+It requires working user namespaces and fails closed if isolation is unavailable.
+Open mode grants access using your Linux account's permissions.
 The sentinel is reactive and cannot guarantee prevention of harmful actions.
 
 See [Security boundaries](SECURITY.md#runtime-boundaries) for current protections,
@@ -147,7 +149,7 @@ style. Activating a model from the home screen starts a new conversation; use
 | `/gpu`, `/terminate` | Manage a Lambda instance and review launch pricing |
 | `/new`, `/resume`, `/home` | Start, resume, or return to the main menu |
 | `/queue` | Inspect, pause, resume, or clear queued prompts |
-| `/sandbox` | Select workspace restrictions or open access with your account permissions |
+| `/sandbox` | Select an isolated workspace or open access with your account permissions |
 | `/sentinel` | Select the local observer, turn it ON/OFF, or edit scope with `/SCOPE` |
 | `/data-collection`, `/upload-perms` | Control collection, manual/automatic uploads and data retention |
 | `/setup` | Revisit skipped setup with hidden credential prompts |

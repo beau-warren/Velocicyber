@@ -711,10 +711,11 @@ class VelocicyberApp(App):
                 Menu(
                     "Filesystem access · currently "
                     + ("OPEN" if self.state.sandbox_open else "WORKSPACE")
-                    + "\nOpen allows file changes and commands across this machine with your "
+                    + "\nWorkspace isolates tools from personal files and credentials; copy needed "
+                    "files into the workspace. Open allows file changes and commands across this machine with your "
                     "Linux account's permissions, without per-command approval. No added root access. "
                     "Collection/upload settings still apply. Resets on restart.",
-                    [(False, "Workspace only — default"), (True, "Open — access this machine")],
+                    [(False, "Workspace — isolated by default"), (True, "Open — access this machine")],
                 ),
                 self.set_sandbox,
             )
@@ -740,7 +741,7 @@ class VelocicyberApp(App):
         self.say(
             "Filesystem access: OPEN — the next task can work outside the workspace."
             if enabled
-            else "Filesystem access: WORKSPACE — the next task uses the workspace sandbox."
+            else "Filesystem access: WORKSPACE — the next task uses an isolated workspace."
         )
         self.animate()
 

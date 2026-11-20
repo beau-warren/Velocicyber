@@ -41,7 +41,7 @@ def main():
         "--sandbox",
         choices=("workspace", "open"),
         default="workspace",
-        help="Filesystem access: workspace (default), or open using your Linux account permissions",
+        help="Filesystem access: isolated workspace (default), or open using your Linux account permissions",
     )
     parser.add_argument("--demo", action="store_true", help="Offline UI demo; no external requests")
     sub = parser.add_subparsers(dest="command")
@@ -119,6 +119,12 @@ def main():
             except RuntimeError:
                 engine_path = "not installed; run ./velocicyber.sh setup"
             print("Velocicyber execution engine:", engine_path)
+            from velocicyber.engine.isolation import check_isolation
+            try:
+                check_isolation()
+                print("Closed filesystem isolation: READY (Bubblewrap)")
+            except RuntimeError as exc:
+                print("Closed filesystem isolation: UNAVAILABLE — " + str(exc))
             for key in ("LAMBDA_REGION", "LAMBDA_SSH_KEY_NAME", "SSH_PRIVATE_KEY"):
                 print(
                     key + ":",

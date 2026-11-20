@@ -15,6 +15,10 @@ Model weights are downloaded
 from their publishers, are never included in this repository, and have their
 own licenses. Review each publisher's model card before downloading or using it.
 
+Closed-mode isolation uses the operating system's separately installed
+[Bubblewrap](https://github.com/containers/bubblewrap) executable. Its upstream
+licenses and notices remain applicable; its source/binary is not bundled here.
+
 The Gemma chat template has its own attribution and retained license in
 `chat-templates/README.md` and `chat-templates/LICENSE.ik_llama.cpp`.
 The Adverserial confidential SDK is downloaded separately from its pinned

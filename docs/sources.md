@@ -32,6 +32,7 @@ requirements, measured results and features still awaiting validation.
 | [Adverserial confidential SDK](https://github.com/AdverserialAI/confidential-sdk) | CyberKimi/CyberGLM/CyberSeek API access. SDK commit `bdf24fda360ff`; hosted models are provider-controlled. |
 | [Lambda Cloud API](https://docs.lambda.ai/api/cloud) | GPU instances, capacity, pricing and SSH-key discovery. |
 | [Hugging Face Hub](https://huggingface.co/docs/huggingface_hub/index), [dataset uploads](https://huggingface.co/docs/huggingface_hub/guides/upload) | Model downloads and optional uploads to your main-agent/sentinel datasets. Python client **1.32.0**. |
+| [Bubblewrap](https://github.com/containers/bubblewrap) | Closed-mode filesystem/process isolation, installed separately through the operating system. `doctor` checks kernel support; the Pi validation used **0.12.0**. |
 | [Textual](https://textual.textualize.io/) | Terminal interface and filterable menus. Bundled Python version **6.12.0**. |
 
 Provider privacy-policy links are in [security and privacy guidance](../SECURITY.md#provider-privacy-documentation).

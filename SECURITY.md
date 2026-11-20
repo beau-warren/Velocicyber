@@ -39,11 +39,20 @@ availability errors.
 
 ### ![Current safeguards](assets/docs/headings/h3-current-safeguards.svg)
 
-- **Default execution restrictions:** closed mode uses the engine's enforced
-  restrictions on file writes and tool network access, independently of whether
-  the model follows instructions.
+- **Default filesystem/process isolation:** closed mode wraps the unmodified
+  engine, its native file tools, shell commands and post-task verifiers in Linux
+  Bubblewrap. Only the selected project workspace and that conversation's engine
+  state are shared writable; host-controlled prompt/catalog files are read-only.
+  System program/library trees and selected DNS/TLS configuration are read-only.
+  The engine gets a private home, temporary directory, device view and process
+  namespace. Personal home files, harness credentials, SSH keys and other sessions
+  are not mounted. Existing engine write/network restrictions still apply.
+  Missing Bubblewrap or unavailable user namespaces stops the task before model
+  access; there is no automatic fallback to Open mode.
 - **Credential handling:** long-lived provider credentials are kept out of the
-  execution engine's inherited environment. Setup saves private configuration
+  execution engine's inherited environment and closed filesystem. A short-lived
+  bridge token lets the engine reach only its host-managed inference bridge.
+  Setup saves private configuration
   with owner-only permissions; private files are excluded from Git. Dataset
   uploads use `HUGGINGFACE_API` on the harness machine. Lambda model operations
   use a separate, permission-checked `HUGGINGFACE_READ_API` token, or anonymous
@@ -64,10 +73,20 @@ availability errors.
 
 ### ![Known limitations](assets/docs/headings/h3-known-limitations.svg)
 
-- **Personal-file isolation is incomplete.** Closed mode does not hide files
-  readable elsewhere in the user's Linux account, including personal documents
-  or credentials. Keeping a secret outside the workspace or setting `0600` does
-  not prevent access by agent tools running under that same account.
+- **Shared data is accessible.** Anything placed in the selected workspace,
+  including project credentials, is available to the agent. Its own conversation
+  history is also accessible. Closing access does not erase data previously read
+  in Open mode or remove it from saved/model context. Symlinks to unmounted host
+  files do not grant access; select the project root if parent files are needed.
+- **Networking is a separate boundary.** The outer sandbox shares the host network
+  so API/Pi/Lambda inference bridges continue working. This does not enforce target
+  scope or isolate reachable localhost/abstract-socket services. Host services
+  must enforce their own authentication; do not expose privileged unauthenticated
+  services to local processes.
+- **This is not a virtual machine.** Bubblewrap shares the host kernel, and system
+  program trees are visible read-only. Kernel/runtime vulnerabilities and resource
+  exhaustion remain possible; workspace writes can still destroy shared project
+  files. Keep backups and update the operating system and isolation tools.
 - **Open mode grants account-level access.** Executed commands receive the user's
   Linux permissions. The harness does not require human approval before every
   command. Inference location does not prevent harmful local actions.
@@ -80,8 +99,8 @@ availability errors.
   sent to it. Enabled dataset uploads create another destination. Sanitization
   cannot guarantee removal of every secret; see [Data](#data).
 
-Use a separate restricted account or isolated execution environment for tasks
-that must not access personal files. Compatibility tests and artifact checksums
+For stronger separation, use a dedicated host/VM and controlled networking.
+Compatibility tests and artifact checksums
 do not establish that model behavior is benign or that every attack is contained;
 see [model supply-chain risk](#model-supply-chain-and-backdoor-risk).
 

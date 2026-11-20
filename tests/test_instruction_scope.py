@@ -14,7 +14,7 @@ from velocicyber.state import State
 
 @pytest.mark.parametrize(
     "workspace_kind,sandbox_open",
-    [("managed", False), ("managed", True), ("project", False)],
+    [("managed", False), ("managed", True), ("project", False), ("project", True)],
 )
 async def test_greeting_uses_workspace_instructions_without_harness_build_brief(
     settings, native_engine, workspace_kind, sandbox_open
@@ -61,6 +61,8 @@ async def test_greeting_uses_workspace_instructions_without_harness_build_brief(
     else:
         workspace = project
     (project / "AGENTS.md").write_text("USER_PROJECT_RULE: Preserve existing files.\n")
+    if workspace != project:
+        (workspace / "AGENTS.md").write_text("WORKSPACE_RULE: Verify edits.\n")
 
     server = ThreadingHTTPServer(("127.0.0.1", 0), Provider)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -83,7 +85,9 @@ async def test_greeting_uses_workspace_instructions_without_harness_build_brief(
             messages = requests[-1]["messages"]
             text = json.dumps(messages)
             assert "HARNESS_BUILD_BRIEF" not in text
-            assert "USER_PROJECT_RULE" in text
+            assert ("USER_PROJECT_RULE" in text) == (workspace == project or sandbox_open)
+            if workspace != project:
+                assert "WORKSPACE_RULE" in text
             assert "Configured coding model: " + PI_MODEL_REPO in text
             content = messages[-1]["content"]
             if isinstance(content, list):

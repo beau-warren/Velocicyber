@@ -4,21 +4,37 @@ import fcntl
 import json
 import os
 import re
+import stat
+import tempfile
 import uuid
 from pathlib import Path
 
 from velocicyber.engine.capture import utcnow
+from velocicyber.engine.isolation import validate_workspace
 
 
 def private_write(path, text):
-    temporary = path.with_suffix(".tmp")
-    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w") as stream:
-        os.fchmod(stream.fileno(), 0o600)
-        stream.write(text)
-        stream.flush()
-        os.fsync(stream.fileno())
-    temporary.replace(path)
+    # Untrusted runtime files must never redirect a host-side write through a
+    # predictable temporary symlink. Replace the destination entry atomically.
+    fd, name = tempfile.mkstemp(prefix="." + path.name + ".", dir=path.parent)
+    temporary = Path(name)
+    try:
+        with os.fdopen(fd, "w") as stream:
+            os.fchmod(stream.fileno(), 0o600)
+            stream.write(text)
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def private_read(path):
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd) as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            raise ValueError("Conversation control files must be regular files.")
+        return stream.read()
 
 
 class Conversation:
@@ -131,16 +147,12 @@ class SessionStore:
             workspace = Path(metadata["workspace"]).resolve()
             if not workspace.is_dir():
                 raise ValueError("The saved workspace is missing.")
-            if not allow_external_workspace and not workspace.is_relative_to(
-                self.settings.root.resolve()
-            ):
-                raise ValueError(
-                    "The saved workspace is outside this project. "
-                    "Select /sandbox > Open before resuming it."
-                )
+            if not allow_external_workspace:
+                validate_workspace(self.settings.root, workspace)
             home = (folder / "engine").resolve()
             if (
-                not home.is_relative_to(folder)
+                (folder / "engine").is_symlink()
+                or not home.is_relative_to(folder)
                 or not (home / "system-prompt.md").is_file()
                 or not (home / "system-prompt.md").resolve().is_relative_to(home)
             ):
@@ -196,7 +208,7 @@ class SessionStore:
                 if not prompt_file.is_file():
                     continue
                 conversation = self.create(
-                    workspace, prompt_file.read_text(), session_id=session_id
+                    workspace, private_read(prompt_file), session_id=session_id
                 )
                 try:
                     target = conversation.home / path.relative_to(legacy_home)

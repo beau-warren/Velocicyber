@@ -88,7 +88,7 @@ def status_guide():
         ("Using", "Provider selected for your next message."),
         ("Sentinel", "Scope observer and its model; reacts by stopping tasks."),
         ("Data", "Fine-tuning data collection on or off."),
-        ("Access", "Agent filesystem access mode."),
+        ("Access", "Isolated workspace or open host access."),
     )
     result = Text(style=TEXT_GRAY)
     for index, (label, description) in enumerate(rows):

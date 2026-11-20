@@ -12,11 +12,27 @@
   changing your current model or session.
 - `/gpu`: choose available GPU capacity and review price before launching a paid instance.
 - `/new` and `/resume`: start or resume a conversation.
-- `/sandbox`: choose workspace restrictions or access using your Linux account permissions.
+- `/sandbox`: choose an isolated workspace or access using your Linux account permissions.
 - `/sentinel`: configure the optional local observer; use `/SCOPE — Edit scope restrictions` to edit `SCOPE/SCOPE.MD`.
 - `/data-collection`: enable collection, control compacted-session eligibility, or manually upload.
 - `/upload-perms`: approve uploads; collection and upload permission start **OFF**.
 - `/queue`: view, pause, resume, or clear queued prompts. Enter queues a prompt while the model is busy; Ctrl+X interrupts and pauses the queue.
+
+Closed access shares exactly the selected workspace. Copy required files into it
+before a task, and select the project root with `--workspace` when the agent needs
+its parent files or `AGENTS.md`. The harness root and private storage cannot be
+used as a closed workspace. Symlinks pointing outside the shared project do not
+expose those host files. Install project dependencies inside the workspace (for
+example, in its `.venv`); host home tools, shell startup files and credentials are
+not inherited. System tools in `/usr` remain available, and API/Lambda/Pi model
+connections stay managed by the harness. Agent home and `/tmp` are disposable.
+Background commands in closed mode stop when the agent turn ends; start services
+that must outlive a turn manually or through Open mode.
+
+Use `/sandbox > Open` deliberately for host administration, home-installed tools,
+or device access. It bypasses this isolation, uses your account permissions, and
+resets on restart. Switching back does not undo previous actions or erase context.
+See [security boundaries](../SECURITY.md#runtime-boundaries) for networking limits.
 
 Menus filter as you type `/` and the command name. Activating a model from the main menu begins a new session. The dashboard identifies the active model and runtime states.
 

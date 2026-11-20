@@ -21,6 +21,13 @@ before end-to-end support can be claimed. The engine installer/updater check for
 Linux ARM64. Automatic selection of runtime packages for other platforms is not
 implemented.
 
+Default closed access also requires **Bubblewrap** and working unprivileged Linux
+user namespaces. On Raspberry Pi OS/Debian, install it with
+`sudo apt install bubblewrap`, then run `./velocicyber.sh doctor` to verify the
+kernel supports isolation. The installer reports a missing backend; it does not
+run privileged package installation automatically. Unsupported systems cannot run
+closed tasks and never silently switch to Open access.
+
 <a name="download-with-curl"></a>
 
 ### ![Download with curl](../assets/docs/headings/h3-download-with-curl.svg)

@@ -22,7 +22,8 @@ from velocicyber.engine.compaction import compaction_exchanges, valid_continuati
 from velocicyber.engine.completion import completed_native_actions, successful_actions
 from velocicyber.engine.context import COMPACTION_PROMPT, ContextBudget
 from velocicyber.engine.installation import provenance
-from velocicyber.engine.sessions import SessionStore, private_write
+from velocicyber.engine.isolation import check_isolation, isolate, validate_workspace
+from velocicyber.engine.sessions import SessionStore, private_read, private_write
 from velocicyber.models.catalog import model_catalog
 from velocicyber.models.pi_profiles import BUGTRACE_PI_REPO
 from velocicyber.providers.api import api_connection
@@ -62,25 +63,24 @@ class Engine:
         return "danger-full-access" if self.state.sandbox_open else "workspace-write"
 
     def validate_workspace(self):
-        if not self.state.sandbox_open and not self.workspace.resolve().is_relative_to(
-            self.settings.root.resolve()
-        ):
-            raise ValueError(
-                "The agent workspace is outside the Velocicyber project. "
-                "Select /sandbox > Open first, or launch with --sandbox open."
-            )
+        if not self.state.sandbox_open:
+            validate_workspace(self.settings.root, self.workspace)
 
     def set_sandbox_open(self, enabled):
         if self.running:
             raise RuntimeError("Stop the current task before changing filesystem access.")
         # Narrowing access must not leave an external directory writable as the cwd.
-        reset = not enabled and not self.workspace.resolve().is_relative_to(
-            self.settings.root.resolve()
-        )
+        reset = False
+        if not enabled:
+            try:
+                validate_workspace(self.settings.root, self.workspace)
+            except ValueError:
+                reset = True
         if reset:
             workspace = (self.settings.root / "workspace").resolve()
             if not workspace.is_relative_to(self.settings.root.resolve()):
                 raise ValueError("The default workspace must not link outside this project.")
+            validate_workspace(self.settings.root, workspace)
             workspace.mkdir(parents=True, exist_ok=True)
             self.new_task()
             self.workspace = workspace
@@ -91,8 +91,7 @@ class Engine:
     def execution_instructions(self, session):
         # Preserve frozen history; adapt the original harness restriction for this turn.
         base = (
-            (session.home / "system-prompt.md")
-            .read_text()
+            private_read(session.home / "system-prompt.md")
             .replace(
                 "Stay within the configured workspace\nand respect tool approval and sandbox rules.",
                 "Respect the current filesystem access setting, tool approval rules, "
@@ -106,7 +105,10 @@ class Engine:
             "This setting does not grant root privileges."
             if self.state.sandbox_open
             else "Filesystem access: WORKSPACE. Keep file changes and commands within the "
-            "configured workspace and obey the engine's sandbox restrictions. "
+            "configured workspace and obey the engine's sandbox restrictions. The engine "
+            "and tools run in an isolated filesystem: personal files, provider credentials, "
+            "host processes and filesystem sockets are not mounted. Install project dependencies in "
+            "the workspace; the isolated home and temporary directory are disposable. "
             "Any earlier Open setting no longer applies."
         )
         tool_guidance = (
@@ -171,6 +173,8 @@ class Engine:
 
     def command(self, proxy, model):
         session = self.ensure_session()
+        if session.home.is_symlink() or session.home.resolve().parent != session.folder.resolve():
+            raise ValueError("Saved engine history must stay inside this conversation.")
         budget = self.context_budget()
         instructions = self.execution_instructions(session)
         instructions_path = session.home / "execution-instructions.md"
@@ -206,10 +210,10 @@ class Engine:
             "shell_environment_policy.exclude": ["VELOCICYBER_BRIDGE_TOKEN"],
             "features.multi_agent": False,
         }
-        if self.workspace == (self.settings.root / "workspace").resolve():
-            # The built-in workspace is a user project, not the harness repository.
-            # Load its own AGENTS.md without inheriting the parent development brief.
-            # Custom project directories retain normal repository-root discovery.
+        if not self.state.sandbox_open or self.workspace == (self.settings.root / "workspace").resolve():
+            # Closed mode shares exactly the selected project directory.
+            # The built-in workspace must never inherit the harness build brief.
+            # Open custom projects retain normal repository-root discovery.
             config["project_root_markers"] = []
         catalog = model_catalog(model, budget, instructions)
         if catalog is not None:
@@ -278,6 +282,10 @@ class Engine:
         observer = None
         primary_failed = False
         try:
+            if not self.state.sandbox_open:
+                self.validate_workspace()
+                # Exercise kernel support before any model/provider connection.
+                await asyncio.to_thread(check_isolation)
             if self.state.sentinel_enabled:
                 if local_sentinel_active(self.state) and (
                     self.state.active_provider == "pi" or self.state.pi_ready
@@ -302,6 +310,7 @@ class Engine:
                 provider=self.state.active_provider,
                 model=self.selected_model,
                 sandbox_mode=self.sandbox_mode,
+                filesystem_isolation="none" if self.state.sandbox_open else "bubblewrap",
             )
             session.append({"type": "user.prompt", "text": self.scrubber.text(prompt)})
 
@@ -405,8 +414,14 @@ class Engine:
         ) as proxy:
             environment["VELOCICYBER_BRIDGE_TOKEN"] = proxy.local_key
             try:
+                command = self.command(proxy, model)
+                if not self.state.sandbox_open:
+                    command, environment = isolate(
+                        command, environment, workspace=self.workspace,
+                        home=self.session.home, engine=self.settings.engine(),
+                    )
                 self.process = await asyncio.create_subprocess_exec(
-                    *self.command(proxy, model),
+                    *command,
                     stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
@@ -477,10 +492,16 @@ class Engine:
             self.verifier and completed and exit_code == 0
             and not failure and not paused_without_summary
         ):
+            verification = self.verifier
+            verifier_environment = {k: v for k, v in environment.items() if k != "VELOCICYBER_BRIDGE_TOKEN"}
+            if not self.state.sandbox_open:
+                verification, verifier_environment = isolate(
+                    verification, verifier_environment, workspace=self.workspace,
+                )
             check = await asyncio.create_subprocess_exec(
-                *self.verifier,
+                *verification,
                 cwd=self.workspace,
-                env={k: v for k, v in environment.items() if k != "VELOCICYBER_BRIDGE_TOKEN"},
+                env=verifier_environment,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT,
                 start_new_session=True,
@@ -603,7 +624,8 @@ class Engine:
                     "engine": provenance(self.settings.engine()),
                     "tool_contract": "native-v1",
                 },
-                "execution": {"sandbox_mode": self.sandbox_mode},
+                "execution": {"sandbox_mode": self.sandbox_mode,
+                              "filesystem_isolation": "none" if self.state.sandbox_open else "bubblewrap"},
                 "system_prompt": system_prompt,
                 "messages": messages,
                 "tools": tool_schema,
