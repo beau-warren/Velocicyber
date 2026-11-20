@@ -18,6 +18,7 @@ from urllib.parse import quote
 SNAPSHOT_DOWNLOADER = r"""
 import hashlib
 import json
+import os
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -29,7 +30,10 @@ done = 0
 print(json.dumps({"stage": "download_progress", "bytes": 0, "total": total}), flush=True)
 
 def download(file):
-    path = Path(hf_hub_download(cfg["repo"], file["filename"], revision=cfg["revision"]))
+    path = Path(hf_hub_download(
+        cfg["repo"], file["filename"], revision=cfg["revision"],
+        token=os.environ.get("HF_TOKEN") or False,
+    ))
     if path.stat().st_size != file["size"]:
         raise RuntimeError("Downloaded file size mismatch: " + file["filename"])
     if file["sha256"]:
@@ -336,7 +340,8 @@ def serve(cfg, *, tensorfold_prepare=None, tensorfold_options=None):
         else:
             private_file(
                 environment,
-                "HF_TOKEN=" + cfg["token"].replace("\n", "").replace("\r", "") + "\n",
+                "HF_TOKEN=" + cfg["token"].replace("\n", "").replace("\r", "") + "\n"
+                "HUGGING_FACE_HUB_TOKEN=\nHF_TOKEN_PATH=/dev/null\n",
             )
             mounts = [
                 "--env-file",

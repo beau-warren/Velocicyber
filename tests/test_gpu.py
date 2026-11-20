@@ -416,9 +416,14 @@ def test_invalid_download_policy_blocks_before_paid_requests(settings, key, valu
     assert manager._client is None
 
 
+@pytest.mark.parametrize("download_token", ["", "read-private-fixture"])
 @pytest.mark.parametrize("outcome", ["success", "error", "cancel"])
-async def test_long_deployment_and_cancellation_keep_resource(settings, monkeypatch, outcome):
+async def test_long_deployment_and_cancellation_keep_resource(settings, monkeypatch, outcome, download_token):
     """Advance the clock beyond the old deadline without waiting 15 minutes."""
+    settings.secrets.update(HUGGINGFACE_API="upload-private-fixture", HUGGINGFACE_READ_API=download_token)
+    validated = []
+    monkeypatch.setattr("velocicyber.providers.huggingface.validate_download_token",
+                        lambda token, **kw: validated.append(token))
     root = Path(__file__).resolve().parents[1]
     (settings.root / "scripts/runtime").mkdir(parents=True)
     (settings.root / "scripts/runtime/serve_model.py").write_bytes(
@@ -471,6 +476,9 @@ async def test_long_deployment_and_cancellation_keep_resource(settings, monkeypa
         def write(self, program):
             tree = ast.parse(program)
             cfg = json.loads(ast.literal_eval(tree.body[-1].value.args[0].args[0]))
+            assert cfg["token"] == download_token
+            assert b"upload-private-fixture" not in program
+            assert validated == ([download_token] if download_token else [])
             assert cfg["download_stall_seconds"] == 240
             assert cfg["download_min_bytes_per_second"] == 512
             assert cfg["download_chunk_mib"] == 256

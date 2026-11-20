@@ -44,7 +44,10 @@ availability errors.
   the model follows instructions.
 - **Credential handling:** long-lived provider credentials are kept out of the
   execution engine's inherited environment. Setup saves private configuration
-  with owner-only permissions; private files are excluded from Git.
+  with owner-only permissions; private files are excluded from Git. Dataset
+  uploads use `HUGGINGFACE_API` on the harness machine. Lambda model operations
+  use a separate, permission-checked `HUGGINGFACE_READ_API` token, or anonymous
+  access when it is blank. The upload token is never used as a download fallback.
 - **Inference transport:** remote API endpoints require HTTPS before credentials
   are sent. HTTP is limited to loopback; `localhost` is pinned to `127.0.0.1`.
   Loopback requests ignore environment proxies, redirects are not followed,
@@ -83,6 +86,10 @@ do not establish that model behavior is benign or that every attack is contained
 see [model supply-chain risk](#model-supply-chain-and-backdoor-risk).
 
 Local API/Pi inference endpoints use loopback listeners. The Lambda inference port is published to host loopback and forwarded over SSH; listeners inside its container are not a public host binding. Users control their own cloud firewall rules. SSH uses first-use trust (`accept-new`) and persists known host keys; out-of-band fingerprint validation is still recommended.
+
+GPU containers started before the separate-token update retain their previous
+environment until replaced or terminated; updating the local harness alone
+does not remove credentials already sent to a running instance.
 
 TLS, SSH, SDK, container and engine dependencies still require ongoing updates
 and review.

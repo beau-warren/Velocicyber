@@ -48,7 +48,7 @@ class Settings:
         modules = read_assignments(root / "Modules.example.txt")
         modules.update(read_assignments(root / "Modules.txt"))
         values = read_assignments(root / ".env")
-        names = {"LAMBDA_API", "ADVERSARIAL_API", "HUGGINGFACE_API", "GITHUB_API", "GH_TOKEN", "GITHUB_TOKEN"}
+        names = {"LAMBDA_API", "ADVERSARIAL_API", "HUGGINGFACE_API", "HUGGINGFACE_READ_API", "GITHUB_API", "GH_TOKEN", "GITHUB_TOKEN"}
         values.update({k: os.environ[k] for k in values.keys() | names if k in os.environ})
         return cls(
             root=root,

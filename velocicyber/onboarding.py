@@ -15,12 +15,19 @@ from velocicyber.config import Settings
 from velocicyber.datasets.pipeline import Scrubber
 from velocicyber.desktop import desktop_directory, install_shortcut
 from velocicyber.models.pi_profiles import BUGTRACE_PI_REPO, LFM3_PI_REPO, PI_MODEL_REPO
+from velocicyber.providers.huggingface import (
+    READ_TOKEN_KEY,
+    TOKEN_SETTINGS_URL,
+    DownloadTokenError,
+    validate_download_token,
+)
 from velocicyber.ssh_setup import lambda_ssh_options
 
 CREDENTIALS = (
     ("LAMBDA_API", "Lambda API Key"),
     ("ADVERSARIAL_API", "Adverserial.ai API key"),
-    ("HUGGINGFACE_API", "Hugging Face API Key"),
+    ("HUGGINGFACE_API", "Hugging Face dataset-upload token (write)"),
+    (READ_TOKEN_KEY, "Hugging Face model-download token (read-only)"),
 )
 DATASETS = (
     ("FINETUNING_REPO", "Main LLM fine-tuning dataset"),
@@ -88,6 +95,53 @@ def install_component(root, script, *arguments):
         raise RuntimeError("Optional installer failed: " + script + ". Run setup again to retry.") from None
 
 
+def credential_changes(settings, credentials, secret_fn, *, force=False):
+    changes = {}
+    for name, label in credentials:
+        configured = bool(settings.secrets.get(name))
+        if configured and not force:
+            print(label + ": already configured (value hidden).")
+            continue
+        if name == READ_TOKEN_KEY:
+            print("Use a separate Read token, or a fine-grained token with only repository read access.")
+            print(TOKEN_SETTINGS_URL + " — checked with Hugging Face before saving or GPU deployment.")
+            print("Skip for public, ungated downloads; the dataset-upload token is never a fallback.")
+        while True:
+            suffix = "Enter keeps current" if configured else "Enter to skip for now"
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("error", getpass.GetPassWarning)
+                    value = secret_fn(label + " (hidden; " + suffix + "): ").strip()
+            except getpass.GetPassWarning:
+                raise ValueError("Hidden input is unavailable. Run setup in a terminal.") from None
+            if not value or value.lower() in {"skip", "skip for now"}:
+                break
+            if any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in value):
+                raise ValueError(label + " must be a single token; its value was not displayed.")
+            if name == READ_TOKEN_KEY:
+                try:
+                    validate_download_token(value, upload_token=changes.get(
+                        "HUGGINGFACE_API", settings.secrets.get("HUGGINGFACE_API", ""),
+                    ))
+                except DownloadTokenError as exc:
+                    print(str(exc))
+                    continue
+            changes[name] = value
+            break
+    read_token = changes.get(READ_TOKEN_KEY, settings.secrets.get(READ_TOKEN_KEY, ""))
+    upload_token = changes.get("HUGGINGFACE_API", settings.secrets.get("HUGGINGFACE_API", ""))
+    if read_token and read_token == upload_token:
+        raise DownloadTokenError("Keep the model-download and dataset-upload tokens separate; no credentials were saved.")
+    return changes
+
+
+def save_credentials(root, changes):
+    if changes:
+        private_assignments(root / ".env", changes)
+    elif (root / ".env").is_file() and not (root / ".env").is_symlink():
+        (root / ".env").chmod(0o600)
+
+
 def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, interactive=None):
     root = Path(root).resolve()
     for name in (".env", "Modules.txt", ".runtime"):
@@ -104,12 +158,23 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
             saved = {}
         if not isinstance(saved, dict):
             saved = {}
-        if not interactive or saved.get("lambda_ssh_setup") == 1:
+        if not interactive:
             return False
-        print("Additional setup: Lambda SSH access. Existing provider and dataset settings are kept.")
-        if options := lambda_ssh_options(root, settings.options, input_fn):
-            private_assignments(root / "Modules.txt", options)
-        saved["lambda_ssh_setup"] = 1
+        changed = False
+        if saved.get("lambda_ssh_setup") != 1:
+            print("Additional setup: Lambda SSH access. Existing provider and dataset settings are kept.")
+            if options := lambda_ssh_options(root, settings.options, input_fn):
+                private_assignments(root / "Modules.txt", options)
+            saved["lambda_ssh_setup"] = 1
+            changed = True
+        if saved.get("hf_download_token_setup") != 1:
+            print("Additional setup: separate Hugging Face model-download token. Existing upload permissions are kept.")
+            credentials = [item for item in CREDENTIALS if item[0] == READ_TOKEN_KEY]
+            save_credentials(root, credential_changes(settings, credentials, secret_fn))
+            saved["hf_download_token_setup"] = 1
+            changed = True
+        if not changed:
+            return False
         from velocicyber.engine.sessions import private_write
         private_write(marker, json.dumps(saved) + "\n")
         return True
@@ -118,28 +183,8 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
             raise ValueError("Run setup in a terminal, or copy .env.example and Modules.example.txt manually.")
         return False
     print("\nVelocicyber setup — skip any item for now. No GPUs will be launched.")
-    print("Credentials stay in this installation's .env with owner-only permissions.")
-    changes = {}
-    for name, label in CREDENTIALS:
-        configured = bool(settings.secrets.get(name))
-        if configured and not force:
-            print(label + ": already configured (value hidden).")
-            continue
-        suffix = "Enter keeps current" if configured else "Enter to skip for now"
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", getpass.GetPassWarning)
-                value = secret_fn(label + " (hidden; " + suffix + "): ").strip()
-        except getpass.GetPassWarning:
-            raise ValueError("Hidden input is unavailable. Run setup in a terminal.") from None
-        if value and value.lower() not in {"skip", "skip for now"}:
-            if any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in value):
-                raise ValueError(label + " must be a single token; its value was not displayed.")
-            changes[name] = value
-    if changes:
-        private_assignments(root / ".env", changes)
-    elif (root / ".env").is_file() and not (root / ".env").is_symlink():
-        (root / ".env").chmod(0o600)
+    print("Credentials are stored in this installation's .env with owner-only permissions.")
+    save_credentials(root, credential_changes(settings, CREDENTIALS, secret_fn, force=force))
     settings = Settings.load(root)
     print("\nOptional dataset destinations. Collection and uploads start OFF.")
     datasets = {}
@@ -216,7 +261,7 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
     if options := lambda_ssh_options(root, settings.options, input_fn):
         private_assignments(root / "Modules.txt", options)
     payload = {"schema": 1, "completed_at": datetime.now(timezone.utc).isoformat(),
-               "lambda_ssh_setup": 1}
+               "lambda_ssh_setup": 1, "hf_download_token_setup": 1}
     descriptor, temporary = tempfile.mkstemp(prefix="setup-", dir=settings.runtime)
     try:
         with os.fdopen(descriptor, "w") as stream:

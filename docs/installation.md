@@ -72,15 +72,33 @@ The first launch runs setup before opening the main menu. Every optional item ca
 
 1. Lambda API Key (hidden input).
 2. Adverserial.ai API key (hidden input).
-3. Hugging Face API Key (hidden input).
-4. **Main LLM dataset:** `your-account/coding-data`.
-5. **Sentinel LLM dataset:** `your-account/sentinel-data` — a separate dataset.
-6. Optional, explicitly confirmed creation of missing Hugging Face datasets as **private**. Existing datasets retain their visibility. This step uploads no training records.
-7. Optional execution engine/API client installation and optional Pi model downloads.
-8. Optional desktop launcher with the bundled neon V icon, when a Linux desktop folder is available. Enter skips it.
-9. Optional Lambda SSH setup: registered key name and private key file. Select a file from `ssh-keys` or enter a path; external keys are copied into this installation with `0600` permissions. No instance is launched.
+3. Hugging Face dataset-upload token (hidden input; write access to your datasets).
+4. Separate Hugging Face model-download token (hidden input; read-only, optional for public ungated models).
+5. **Main LLM dataset:** `your-account/coding-data`.
+6. **Sentinel LLM dataset:** `your-account/sentinel-data` — a separate dataset.
+7. Optional, explicitly confirmed creation of missing Hugging Face datasets as **private**. Existing datasets retain their visibility. This step uploads no training records.
+8. Optional execution engine/API client installation and optional Pi model downloads.
+9. Optional desktop launcher with the bundled neon V icon, when a Linux desktop folder is available. Enter skips it.
+10. Optional Lambda SSH setup: registered key name and private key file. Select a file from `ssh-keys` or enter a path; external keys are copied into this installation with `0600` permissions. No instance is launched.
 
 Credentials are saved to `.env`; dataset destinations and SSH name/path settings are saved to `Modules.txt`. Private-key contents stay in the key file. Setup writes these files with owner-only permissions (`0600`). Both files are excluded from Git. Configuration is parsed as data, never sourced as shell code.
+
+Keep `HUGGINGFACE_API` for dataset uploads. Set `HUGGINGFACE_READ_API` to a
+different [Hugging Face token](https://huggingface.co/settings/tokens) with
+**Read** permission, or fine-grained repository-read permissions limited to
+the models you need. Setup verifies new download tokens with Hugging Face;
+write-capable or unknown permissions are rejected. GPU planning, launch and
+deployment recheck the token before use. A verification failure stops that
+operation without forwarding the token to Lambda.
+
+Leaving the download token blank uses anonymous model access, never the
+upload token or a cached Hugging Face login. Private/gated models require an
+authorized read token and any model-access approvals in your Hugging Face
+account. Public Pi downloads continue to work without a token.
+
+Existing installations receive a one-time download-token prompt after updating.
+Enter skips it; your existing upload token and collection/upload permissions
+are preserved. Headless launches defer the prompt.
 
 Use `/setup` in the slash/backslash menu to revisit skipped items. It asks before
 ending the session, stopping local models and terminating its tracked GPU, then

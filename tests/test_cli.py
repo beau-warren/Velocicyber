@@ -81,7 +81,7 @@ def test_menu_setup_runs_after_ui_closes_and_reloads_secure_configuration(settin
     monkeypatch.setattr(onboarding, "install_component", lambda *a, **k: pytest.fail("Unexpected install"))
     original_setup = onboarding.run_setup
     answers = iter(["owner/main", "owner/sentinel", "n", "n", "", "y", ""])
-    secrets = iter(["lambda-private-fixture", "api-private-fixture", ""])
+    secrets = iter(["lambda-private-fixture", "api-private-fixture", "", ""])
 
     def wizard(root, *, force=False):
         if not force:

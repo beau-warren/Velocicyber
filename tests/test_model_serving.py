@@ -217,10 +217,22 @@ def test_bad_checksum_keeps_existing_server(remote_setup):
     assert not list(folder.rglob("*.partial"))
 
 
-def test_safetensors_uses_pinned_revision_and_vllm(remote_setup):
+def test_safetensors_uses_pinned_revision_and_vllm(remote_setup, monkeypatch):
     cfg, commands, folder = remote_setup
     cfg["backend"] = "vllm"
+    original = serve_model.subprocess.run
+    environments = []
+
+    def run(args, **kwargs):
+        if "--env-file" in args:
+            path = Path(args[args.index("--env-file") + 1])
+            assert path.stat().st_mode & 0o777 == 0o600
+            environments.append(dict(line.split("=", 1) for line in path.read_text().splitlines()))
+        return original(args, **kwargs)
+
+    monkeypatch.setattr(serve_model.subprocess, "run", run)
     serve_model.serve(cfg)
+    assert environments == [{"HF_TOKEN": cfg["token"], "HUGGING_FACE_HUB_TOKEN": "", "HF_TOKEN_PATH": "/dev/null"}]
     command = commands[-1]
     assert command[command.index("--revision") + 1] == cfg["revision"]
     assert command[command.index("--tool-call-parser") + 1] == "qwen3_coder"
@@ -300,9 +312,10 @@ def test_snapshot_requires_space_before_starting_download(remote_setup, monkeypa
     assert not commands
 
 
+@pytest.mark.parametrize("download_token", ["", "read-fixture"])
 @pytest.mark.parametrize("corrupt", [False, True])
 def test_snapshot_downloader_verifies_shards_and_reports_weight_bytes(
-    tmp_path, monkeypatch, capsys, corrupt
+    tmp_path, monkeypatch, capsys, corrupt, download_token
 ):
     import io
     import sys
@@ -320,8 +333,10 @@ def test_snapshot_downloader_verifies_shards_and_reports_weight_bytes(
     cfg = {"repo": "owner/model", "revision": "a" * 40, "weight_bytes": 7, "download_files": files}
     calls = []
 
-    def download(repo, filename, revision):
-        calls.append((repo, filename, revision))
+    monkeypatch.setenv("HF_TOKEN", download_token)
+
+    def download(repo, filename, revision, token):
+        calls.append((repo, filename, revision, token))
         return str(tmp_path / filename)
 
     monkeypatch.setattr(huggingface_hub, "hf_hub_download", download)
@@ -335,6 +350,7 @@ def test_snapshot_downloader_verifies_shards_and_reports_weight_bytes(
         events = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
         assert events[-1] == {"stage": "download_progress", "bytes": 7, "total": 7}
     assert len(calls) == 2 and all(call[2] == cfg["revision"] for call in calls)
+    assert all(call[3] == (download_token or False) for call in calls)
 
 
 @pytest.mark.parametrize("backend,flag", [("llama.cpp", "--ctx-size"), ("vllm", "--max-model-len")])

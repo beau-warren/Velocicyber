@@ -110,9 +110,11 @@ execution engine is installed separately during optional setup. Pi runtime build
 also need Git, CMake and a C++ compiler; the Adverserial API client needs Node.js
 and npm. See [installation](docs/installation.md) for platform requirements.
 
-First launch asks for your Lambda, Adverserial.ai and Hugging Face credentials,
-and separate main-agent and sentinel dataset names. Each optional item can be
-skipped. Keys stay in your local `.env`; other settings go in `Modules.txt`.
+First launch asks for your Lambda and Adverserial.ai credentials, separate Hugging
+Face dataset-upload and read-only model-download tokens, and main-agent/sentinel
+dataset names. Each optional item can be skipped. Credentials are stored in your
+local `.env`; only the verified download token is sent to approved Lambda instances.
+Other settings go in `Modules.txt`.
 Collection and uploads start **OFF**. No GPU model is selected automatically, and
 Pi model weights download only after explicit setup consent or a download confirmation
 when selecting an uninstalled Pi model in `/local`.

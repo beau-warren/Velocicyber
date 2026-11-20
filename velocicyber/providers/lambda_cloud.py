@@ -15,6 +15,7 @@ import httpx
 from velocicyber.engine.context import ContextBudget, served_context_window
 from velocicyber.models.gpu_profiles import GPU_PROFILES
 from velocicyber.models.pi_profiles import PI_PROFILES
+from velocicyber.providers.huggingface import model_download_token
 from velocicyber.state import GPUStatus
 
 SINGLE_MEMORY_CHOICES = (24, 40, 48, 80, 180)
@@ -181,11 +182,11 @@ class GPUManager:
             raise ValueError("Choose a GPU model in /local before loading or uploading it.")
         if repo in PI_PROFILES:
             raise ValueError("This Raspberry Pi model uses the local CPU runtime, not Lambda GPUs.")
+        token = model_download_token(self.settings)
         if self.spec and self.spec.repo == repo:
             return self.spec
         from huggingface_hub import HfApi, hf_hub_download
 
-        token = self.settings.secrets.get("HUGGINGFACE_API") or False
         info = HfApi(token=token).model_info(repo, files_metadata=True)
         profile = GPU_PROFILES.get(repo)
         ggufs = [f for f in info.siblings if f.rfilename.endswith(".gguf")]
@@ -401,6 +402,7 @@ class GPUManager:
             raise RuntimeError("An existing or unresolved launch must be reconciled first.")
         if time.time() - plan.created_at > 300 or plan.model.repo != self.settings.local_model:
             raise ValueError("Launch plan expired or model changed. Prepare a new plan.")
+        model_download_token(self.settings)  # Recheck before requesting paid resources.
         self.state.instance_type, self.state.region = plan.instance_type, plan.region
         self.state.gpu_count = plan.gpu_count
         self.state.total_vram_gib = plan.total_vram_gib
@@ -575,6 +577,7 @@ class GPUManager:
                 "the current instance is too small or its memory is unknown."
             )
         self.validate_loaded_hardware(spec)
+        token = await asyncio.to_thread(model_download_token, self.settings)
         self.state.model_revision = spec.revision
         profile = GPU_PROFILES.get(spec.repo)
         script = (self.settings.root / "scripts/runtime/serve_model.py").read_text()
@@ -587,7 +590,7 @@ class GPUManager:
             "gpus": self.state.gpu_count,
             "tool_parser": spec.tool_parser,
             "reasoning_parser": spec.reasoning_parser,
-            "token": self.settings.secrets.get("HUGGINGFACE_API", ""),
+            "token": token or "",
             "backend": spec.backend,
             "filename": spec.filename,
             "sha256": spec.sha256,
@@ -605,7 +608,8 @@ class GPUManager:
         if spec.backend == "tensorfold":
             lock = json.loads((self.settings.root / "config/locks/serving.lock.json").read_text())
             config["tensorfold_runtime"] = lock["model_images"][spec.repo]
-        # The credential travels through encrypted stdin, never cloud-init or argv.
+        # Only the verified read-only token travels through encrypted SSH stdin.
+        # The dataset-upload token is never included in remote configuration.
         helpers = (
             ", tensorfold_prepare=prepare_tensorfold, tensorfold_options=tensorfold_server_options"
             if spec.backend == "tensorfold" else ""

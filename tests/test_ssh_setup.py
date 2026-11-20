@@ -76,7 +76,7 @@ def test_existing_install_gets_only_new_ssh_prompt_once_and_keeps_secrets(tmp_pa
     runtime = tmp_path / ".runtime"
     runtime.mkdir()
     marker = runtime / MARKER
-    marker.write_text('{"schema":1,"completed_at":"previous"}\n')
+    marker.write_text('{"schema":1,"completed_at":"previous","hf_download_token_setup":1}\n')
     (tmp_path / ".env").write_text("LAMBDA_API=keep-private\nADVERSARIAL_API=keep-api\n")
     (tmp_path / "Modules.txt").write_text("FINETUNING_REPO=owner/keep\nCUSTOM=keep\n")
     key = tmp_path / "lambda.pem"
@@ -101,7 +101,7 @@ def test_headless_launch_defers_new_prompt_and_skip_is_remembered(tmp_path):
     runtime = tmp_path / ".runtime"
     runtime.mkdir()
     marker = runtime / MARKER
-    marker.write_text('{"schema":1}\n')
+    marker.write_text('{"schema":1,"hf_download_token_setup":1}\n')
     assert not run_setup(tmp_path, interactive=False)
     assert "lambda_ssh_setup" not in json.loads(marker.read_text())
     assert run_setup(tmp_path, interactive=True, input_fn=answers(""))
@@ -116,7 +116,7 @@ def test_first_run_saves_ssh_settings_after_optional_setup(tmp_path, monkeypatch
     key.write_bytes(KEY)
     for name, _ in onboarding.CREDENTIALS:
         monkeypatch.delenv(name, raising=False)
-    assert run_setup(tmp_path, interactive=True, secret_fn=answers("", "", ""),
+    assert run_setup(tmp_path, interactive=True, secret_fn=answers("", "", "", ""),
                      input_fn=answers("", "", "n", "", "registered-key", "key.pem"))
     values = read_assignments(tmp_path / "Modules.txt")
     assert values["LAMBDA_SSH_KEY_NAME"] == "registered-key"

@@ -26,7 +26,7 @@ Use the harness's shutdown flow to terminate a tracked Lambda instance. After an
 
 ## ![Data and sentinel](../assets/docs/headings/h2-data-and-sentinel.svg)
 
-Data destinations belong to the person installing the harness. Main-agent data uses `FINETUNING_REPO`; sentinel observations use `SENTINEL_FINETUNING_REPO`. Set full `account/dataset-name` IDs, with write permission for your Hugging Face key. The destinations must be different.
+Data destinations belong to the person installing the harness. Main-agent data uses `FINETUNING_REPO`; sentinel observations use `SENTINEL_FINETUNING_REPO`. Set full `account/dataset-name` IDs, with write permission for your `HUGGINGFACE_API` dataset-upload token. The separate `HUGGINGFACE_READ_API` token is only for model downloads. The destinations must be different.
 
 The shared collection/upload controls govern both pipelines. Raw local records may contain confidential task content. Derived data is scrubbed and deduplicated before append-style publication, but automated scrubbing is not a guarantee: review your data and authorization before enabling uploads. Local published records are cleaned up only after a confirmed remote commit and a durable receipt; unconfirmed/pending records are retained. Conversation history for `/resume` is stored separately.
 

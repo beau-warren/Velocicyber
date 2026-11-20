@@ -112,7 +112,7 @@ def main():
             print("Raspberry Pi CPU model:", settings.pi_model or "not configured")
             print("Main LLM dataset:", settings.dataset_repo or "MISSING")
             print("Sentinel dataset:", settings.options.get("SENTINEL_FINETUNING_REPO") or "MISSING")
-            for key in ("ADVERSARIAL_API", "LAMBDA_API", "HUGGINGFACE_API"):
+            for key in ("ADVERSARIAL_API", "LAMBDA_API", "HUGGINGFACE_API", "HUGGINGFACE_READ_API"):
                 print(key + ":", "configured" if settings.secrets.get(key) else "MISSING")
             try:
                 engine_path = settings.engine()

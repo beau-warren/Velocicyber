@@ -36,7 +36,7 @@ def responses(*values):
 def setup(root, answers=(), secrets=("", "", ""), ssh_answers=("",), **kwargs):
     return onboarding.run_setup(
         root, interactive=True, input_fn=responses(*answers, *ssh_answers),
-        secret_fn=responses(*secrets), **kwargs,
+        secret_fn=responses(*secrets, ""), **kwargs,  # Existing scenarios skip the optional read token.
     )
 
 
@@ -59,7 +59,8 @@ def test_separate_dataset_prompts_hidden_secrets_and_private_files(tmp_path, cap
     settings = Settings.load(tmp_path)
     assert settings.dataset_repo == "owner/main-data"
     assert settings.options["SENTINEL_FINETUNING_REPO"] == "owner/sentinel-data"
-    assert tuple(settings.secrets[key] for key, _ in onboarding.CREDENTIALS) == secrets
+    assert tuple(settings.secrets[key] for key, _ in onboarding.CREDENTIALS
+                 if key != "HUGGINGFACE_READ_API") == secrets
     for name in (".env", "Modules.txt"):
         assert stat.S_IMODE((tmp_path / name).stat().st_mode) == 0o600
     output = capsys.readouterr().out
