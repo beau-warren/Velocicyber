@@ -7,6 +7,10 @@
   <img width="672" height="142" alt="image" src="assets/branding/wordmark.png" />
 </p>
 
+<p align="center">
+  <img width="960" alt="A velociraptor sprinting down a neon-lit, Tokyo-inspired cyberpunk street at night" src="assets/branding/velociraptor-cyberpunk.png" />
+</p>
+
 > [!CAUTION]
 > **Responsible use and liability disclaimer**
 >
