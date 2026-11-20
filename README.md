@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="960" alt="Velocicyber neon logo and title on translucent black panels over a dark velociraptor sprinting through a neon-lit cyberpunk street" src="assets/branding/velocicyber-raptor-banner.png" />
+  <img width="960" alt="Velocicyber neon logo and title centered at the bottom on translucent black panels over a dark velociraptor sprinting through a neon-lit cyberpunk street" src="assets/branding/velocicyber-raptor-banner.png" />
 </p>
 
 > [!CAUTION]
