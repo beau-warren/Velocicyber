@@ -56,12 +56,14 @@ model alone does not launch an instance or download its weights to the Pi.
 Capacity choices use the menu's GB labels; profile floors, host RAM and disk
 requirements below are in GiB. Floors are configured planning allowances, not
 measured universal minimums. GPU architecture and count must also match the
-profile: total VRAM alone does not establish compatibility. Profiles use **32K context**, except Flint at **64K**, with text/coding tools
+profile: total VRAM alone does not establish compatibility. Profiles use **32K context**,
+except Flint at **64K** and MOG at **64K or 1M**, with text/coding tools
 and one request at a time.
 
 | Model | Lambda capacity choice | Profile VRAM floor | Host RAM minimum | Disk minimum | Serving backend |
 | --- | --- | --- | --- | --- | --- |
-| [M.O.G.-SEC 27B](#mog-sec-27b-bf16) | Single 80 GB H100; 180 GB B200 also supported | 72 GiB | 128 GiB | 256 GiB | vLLM |
+| [M.O.G.-SEC 27B — 64K](#mog-sec-27b-bf16) | Single 80 GB H100; 180 GB B200 also supported | 72 GiB | 128 GiB | 256 GiB | vLLM |
+| [M.O.G.-SEC 27B — 1M, experimental](#mog-sec-27b-bf16) | Single 180 GB B200; 2× B200 for more headroom | 160 GiB | 256 GiB | 256 GiB | vLLM |
 | [OrcaCyber Nano](#orcacyber-nano-mix-157g) | Single 24 GB A10; 48 GB A6000 recommended for headroom | 24 GiB | 32 GiB | 64 GiB | llama.cpp |
 | [Flint Mix-24G](#flint-mix-24g) | Single 40 GB A100 minimum menu choice; 48 GB A6000 recommended | 32 GiB | 64 GiB | 96 GiB | llama.cpp |
 | [CYBER-FROST 3.8 BF16](#cyber-frost-38-bf16) | Cluster 720 GB, 4× B200 recommended for first test | 480 GiB | 512 GiB | 512 GiB | vLLM |
@@ -76,7 +78,8 @@ image downloads or compilation can exceed these ranges.
 
 | Model | Fresh startup | Cached startup | Estimate basis |
 | --- | --- | --- | --- |
-| M.O.G.-SEC 27B | 10–20 min | 2–4 min | Based on an earlier H100 validation run |
+| M.O.G.-SEC 27B — 64K | 10–20 min | 2–4 min | Projected from an earlier 32K H100 run |
+| M.O.G.-SEC 27B — 1M | 15–35 min | 4–10 min | Projected; full-context Lambda validation pending |
 | OrcaCyber Nano | 25–50 min | 2–5 min | Projected; unmeasured on Lambda |
 | Flint Mix-24G | 35–70 min | 3–6 min | Projected; unmeasured on Lambda |
 | CYBER-FROST 3.8 BF16 | 6–14 hours | 10–30 min | Projected; unmeasured on Lambda |
@@ -93,16 +96,39 @@ The inference container is published on the GPU host's loopback address and acce
 ### ![M.O.G.-SEC 27B BF16](../assets/docs/headings/h3-mog-sec-27b-bf16.svg)
 
 [Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16](https://huggingface.co/Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16)
-uses about **55.6 GB of BF16 weights**. The profile permits H100/H200/B200/B300
-hardware with 1, 2, 4 or 8 GPUs, subject to the capacity and host requirements.
-Single 80 GB H100 is the recommended starting choice.
+uses about **55.6 GB of BF16 weights**. In `/local`, choose MOG, then choose a
+context window before **Confirm selected model choice** or **More Details**:
 
-A basic coding/tool check passed on one H100 SXM5. On 2026-10-08, that run
-transferred the weights in about **2 min 13 sec**, followed by about **2 min
-18 sec** of server initialization. Allow roughly **2–5 minutes for transfer**
-or **5–10 minutes until ready** on a running GPU with the serving image present.
-This was one run; long-session stability remains under investigation. The
-advertised **1M context is not enabled** and requires a separate serving profile.
+- **64K (65,536 tokens):** lighter profile; start with **Single 80 GB H100**.
+  Uses BF16 KV cache and float32 recurrent state, with a 72 GiB VRAM planning floor.
+- **1 million (1,000,000 tokens), experimental:** first-test recommendation is
+  **Single 180 GB B200**; **2× B200 (360 GB)** provides more headroom. Uses FP8
+  KV cache, float32 recurrent state, chunked prefill and prefix caching. The
+  planning floor is 160 GiB VRAM; a single 80 GB instance is rejected.
+
+Both profiles permit compatible H100/H200/B200/B300 hardware with 1, 2, 4 or 8
+GPUs, subject to their capacity, host RAM and disk requirements. They reuse the
+same checkpoint and cached weight files; changing context restarts inference.
+The server must report the selected context before the harness marks it ready.
+A running older 32K server needs reloading through `/local`.
+
+The window covers input, reasoning, tool results and output. Automatic compaction
+starts at 75%: **49,152 tokens for 64K**, **750,000 for 1M**. The 1M profile allows
+at least **60 minutes of response inactivity** for long prompt processing; Ctrl+X
+still interrupts. A full-context prompt can take many minutes before output,
+beyond the startup estimates above. Vision and speculative drafting stay disabled.
+
+The earlier **32K** coding/tool check on one H100 SXM5 transferred the weights in
+about **2 min 13 sec**, followed by **2 min 18 sec** of server initialization.
+The new 64K limit and the 1M profile have **not been live-validated on Lambda**;
+full-context memory, speed, accuracy and tool reliability still require testing.
+The publisher's SGLang deployment is separate from this harness's pinned vLLM
+profile. A small successful readiness probe does not establish 1M quality.
+
+Optional `MOG_CONTEXT_PROFILE=64k` or `1m` in `Modules.txt` sets the profile for
+programmatic selection; the `/local` choice takes effect for the current harness
+run. No model uploads automatically at startup. This explicit profile takes
+precedence over a legacy MOG entry in `LOCAL_MODEL_CONTEXT_WINDOWS`.
 
 <a name="orcacyber-nano-mix-157g"></a>
 

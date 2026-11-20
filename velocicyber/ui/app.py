@@ -19,7 +19,7 @@ from velocicyber.datasets.pipeline import dataset_summary, delete_local_finetuni
 from velocicyber.datasets.upload import Uploader
 from velocicyber.engine.installation import take_update_notice
 from velocicyber.engine.runner import Engine
-from velocicyber.models.gpu_profiles import GPU_PROFILES
+from velocicyber.models.gpu_profiles import MOG_CONTEXT_PROFILES, MOG_SEC_REPO, gpu_profile
 from velocicyber.models.startup import model_details, model_option_label
 from velocicyber.providers import temperature
 from velocicyber.providers.lambda_cloud import MEMORY_CHOICES, SINGLE_MEMORY_CHOICES, GPUManager
@@ -840,13 +840,34 @@ class VelocicyberApp(App):
             }
         )
 
-    def review_local_model(self, repo):
+    def gpu_model_ready(self, repo, mog_context=None):
+        if not (self.state.model_ready and repo == self.settings.local_model):
+            return False
+        if repo == MOG_SEC_REPO:
+            profile = gpu_profile(repo, mog_context) if mog_context else self.settings.gpu_profile(repo)
+            return (self.state.model_context_model == repo
+                    and self.state.model_context_window == profile.context_window)
+        return True
+
+    def review_local_model(self, repo, *, mog_context=None):
         if repo in {"gpu-controls", "pi-stop"}:
             self.select_local_model(repo)
+        elif repo == MOG_SEC_REPO and repo in self.settings.model_choices and mog_context is None:
+            self.push_screen(
+                Menu(
+                    repo + "\nChoose the context window",
+                    [("64k", "64K context — lighter · 80 GB H100"),
+                     ("1m", "1M context (1 million) — experimental · 180 GB B200")],
+                    id="mog-context",
+                ),
+                lambda variant: self.review_local_model(repo, mog_context=variant)
+                if variant in MOG_CONTEXT_PROFILES else None,
+            )
         elif repo in self.settings.model_choices:
             self.push_screen(
                 Menu(
                     repo
+                    + (f"\nContext: {mog_context.upper()}" if mog_context else "")
                     + ("\n" + PI_MODEL_NOTICE if repo in self.settings.pi_model_choices else ""),
                     [
                         ("confirm", "Confirm selected model choice"),
@@ -854,31 +875,31 @@ class VelocicyberApp(App):
                     ],
                     id="local-model-choice",
                 ),
-                lambda action: self.local_model_choice(repo, action),
+                lambda action: self.local_model_choice(repo, action, mog_context=mog_context),
             )
 
-    def local_model_choice(self, repo, action):
+    def local_model_choice(self, repo, action, *, mog_context=None):
         if action == "confirm":
-            self.select_local_model(repo)
+            self.select_local_model(repo, mog_context=mog_context)
         elif action == "back":
-            self.review_local_model(repo)
+            self.review_local_model(repo, mog_context=mog_context)
         elif action == "details":
             ready = (
                 self.state.pi_ready and repo == self.settings.pi_model
                 if repo in self.settings.pi_model_choices
-                else self.state.model_ready and repo == self.settings.local_model
+                else self.gpu_model_ready(repo, mog_context)
             )
             self.push_screen(
                 Menu(
                     "Model Details\n" + repo + "\nPgUp / PgDn or mouse wheel to scroll",
                     [("back", "Back"), ("confirm", "Confirm selected model choice")],
                     id="local-model-details",
-                    details=model_details(repo, ready=ready),
+                    details=model_details(repo, ready=ready, variant=mog_context or ""),
                 ),
-                lambda choice: self.local_model_choice(repo, choice),
+                lambda choice: self.local_model_choice(repo, choice, mog_context=mog_context),
             )
 
-    def select_local_model(self, repo, *, download_approved=False):
+    def select_local_model(self, repo, *, download_approved=False, mog_context=None):
         if self.busy or self.pi_busy or self.sentinel_busy:
             self.say("Wait for the current task or model operation to finish.")
             return
@@ -926,19 +947,27 @@ class VelocicyberApp(App):
             if not self.can_select_local_model():
                 self.say("Wait for the GPU operation to finish, or refresh its status first.")
             elif self.state.gpu_status == GPUStatus.STOPPED:
+                if repo == MOG_SEC_REPO:
+                    profile = gpu_profile(repo, mog_context) if mog_context else self.settings.gpu_profile(repo)
+                    self.settings.options["MOG_CONTEXT_PROFILE"] = profile.variant
+                self.gpu.spec = None
                 self.settings.local_model = repo
                 self.state.private_target = "gpu"
                 self.state.model_ready = False
                 self.state.active_provider = "api"
                 if not self.conversation:
                     self.command("new")
-                self.say("Selected for the next GPU launch: " + repo + ". Turn GPUs ON to use it.")
+                context = f" ({self.settings.local_context_window():,} tokens)" if repo == MOG_SEC_REPO else ""
+                self.say("Selected for the next GPU launch: " + repo + context + ". Turn GPUs ON to use it.")
                 self.animate()
             else:
                 self.state.private_target = "gpu"
                 if not self.conversation:
                     self.command("new")
-                self.gpu_operation("load", repo)
+                if repo == MOG_SEC_REPO:
+                    self.gpu_operation("load", repo, mog_context=mog_context)
+                else:
+                    self.gpu_operation("load", repo)
 
     @work(group="pi", exclusive=True)
     async def pi_operation(self, operation, *, allow_download=False):
@@ -1335,7 +1364,7 @@ class VelocicyberApp(App):
             self.say("Choose and confirm a GPU model in /local first.")
             self.menu_selected("local")
             return
-        if value == "load" and self.state.model_ready:
+        if value == "load" and self.gpu_model_ready(self.settings.local_model):
             self.state.active_provider = "local"
             self.state.private_target = "gpu"
             self.engine.new_task()
@@ -1352,8 +1381,8 @@ class VelocicyberApp(App):
                     + "Selected model: "
                     + self.settings.local_model
                     + (
-                        "\n" + GPU_PROFILES[self.settings.local_model].notice
-                        if self.settings.local_model in GPU_PROFILES
+                        "\n" + self.settings.gpu_profile().notice
+                        if self.settings.gpu_profile()
                         else ""
                     ),
                     memory_price_options(self.settings.runtime),
@@ -1432,7 +1461,9 @@ class VelocicyberApp(App):
                 Menu(
                     f"Launch {plan.instance_type} in {plan.region}?\n"
                     f"{plan.gpu_count} GPU(s) · {plan.total_vram_gib} GB total VRAM · ${plan.hourly_cents / 100:.2f}/hour\n"
-                    f"Model: {plan.model.repo}\nBilling continues until termination.",
+                    f"Model: {plan.model.repo}\n"
+                    f"Context: {self.settings.local_context_window():,} tokens\n"
+                    "Billing continues until termination.",
                     [(True, "Approve launch and load model")],
                 )
             )
@@ -1459,7 +1490,10 @@ class VelocicyberApp(App):
             self.gpu_busy = False
 
     async def load_model(self):
-        self.say("Loading the selected model. " + model_option_label(self.settings.local_model))
+        profile = self.settings.gpu_profile()
+        self.say("Loading the selected model. " + model_option_label(
+            self.settings.local_model, variant=profile.variant if profile else ""
+        ))
         try:
             await self.gpu.deploy()
             for _ in range(60):
@@ -1479,25 +1513,32 @@ class VelocicyberApp(App):
                 self.state.model_stage = ""
 
     @work(group="gpu")
-    async def gpu_operation(self, operation, repo=None):
+    async def gpu_operation(self, operation, repo=None, *, mog_context=None):
         if self.gpu_busy:
             return
         self.gpu_busy = True
         try:
             if self.demo:
                 if operation == "load" and repo:
+                    if repo == MOG_SEC_REPO and mog_context:
+                        self.settings.options["MOG_CONTEXT_PROFILE"] = gpu_profile(repo, mog_context).variant
                     self.settings.local_model = repo
+                    self.state.model_context_window = self.settings.local_context_window()
+                    self.state.model_context_model = repo
                     self.state.model_ready = True
                     self.state.active_provider = "local"
                 self.say("DEMO: " + operation)
             elif operation == "load":
                 repo = repo or self.settings.local_model
-                if self.state.model_ready and repo == self.settings.local_model:
+                if self.gpu_model_ready(repo, mog_context):
                     self.state.active_provider = "local"
                     self.engine.new_task()
                     self.say("Selected the loaded private model.")
                     return
-                spec = await asyncio.to_thread(self.gpu.inspect_model, repo)
+                if repo == MOG_SEC_REPO and mog_context:
+                    spec = await asyncio.to_thread(self.gpu.inspect_model, repo, profile_variant=mog_context)
+                else:
+                    spec = await asyncio.to_thread(self.gpu.inspect_model, repo)
                 if (
                     await asyncio.to_thread(self.gpu.refresh) != "active"
                     or self.state.gpu_status != GPUStatus.RUNNING
@@ -1509,6 +1550,8 @@ class VelocicyberApp(App):
                         "choose a larger instance before switching."
                     )
                 self.gpu.validate_loaded_hardware(spec)
+                if repo == MOG_SEC_REPO:
+                    self.settings.options["MOG_CONTEXT_PROFILE"] = spec.profile_variant
                 self.settings.local_model = repo
                 self.state.model_ready = False
                 self.state.active_provider = "api"

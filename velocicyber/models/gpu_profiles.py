@@ -24,6 +24,8 @@ class ServingProfile:
     notice: str
     backend: str = "vllm"
     gguf_filename: str = ""
+    variant: str = ""
+    response_timeout_seconds: int = 0
 
     def supports_hardware(self, description, gpu_count):
         return gpu_count in self.gpu_counts and any(
@@ -141,7 +143,8 @@ GPU_PROFILES = {
     ),
     MOG_SEC_REPO: ServingProfile(
         family="qwen3_5",
-        context_window=32768,
+        variant="64k",
+        context_window=65536,
         minimum_vram_gib=72,
         minimum_host_memory_gib=128,
         minimum_disk_gib=256,
@@ -157,9 +160,54 @@ GPU_PROFILES = {
         notice=(
             "Lambda GPUs required · 55.6 GB BF16 weights.\n"
             "Recommended first test: Single 80 GB (H100); Single 180 GB (B200) also supported.\n"
-            "Harness context: 32K. The advertised 1M context needs a separate serving profile.\n"
-            "Basic coding/tool check passed on one H100 SXM5 (80 GB); "
-            "long-session stability still under investigation."
+            "Harness context: 64K (65,536 tokens), BF16 KV cache.\n"
+            "Earlier 32K coding/tool check passed on H100; the new 64K limit "
+            "and long-session stability await live validation."
         ),
     ),
 }
+
+
+MOG_CONTEXT_PROFILES = {
+    "64k": GPU_PROFILES[MOG_SEC_REPO],
+    "1m": ServingProfile(
+        family="qwen3_5",
+        variant="1m",
+        context_window=1_000_000,
+        minimum_vram_gib=160,
+        minimum_host_memory_gib=256,
+        minimum_disk_gib=256,
+        gpu_families=("H100", "H200", "B200", "B300"),
+        gpu_counts=(1, 2, 4, 8),
+        arguments=(
+            "--dtype", "bfloat16",
+            "--mamba-ssm-cache-dtype", "float32",
+            "--language-model-only",
+            "--kv-cache-dtype", "fp8_e4m3",
+            "--enable-chunked-prefill",
+            "--max-num-batched-tokens", "2048",
+            "--enable-prefix-caching",
+            "--mamba-cache-mode", "align",
+            "--prefix-cache-retention-interval", "0",
+        ),
+        response_timeout_seconds=3600,
+        notice=(
+            "Experimental MOG 1M context (1,000,000 tokens).\n"
+            "Same 55.6 GB BF16 weights; FP8 KV cache and float32 recurrent state.\n"
+            "Recommended first test: Single 180 GB (B200). More headroom: 2× B200 (360 GB).\n"
+            "Planning floor: 160 GiB VRAM; Single 80 GB is unsupported.\n"
+            "One request at a time. Full-context speed, accuracy and tool use are unvalidated.\n"
+            "Long prompts may take many minutes before output; compaction starts near 750K tokens."
+        ),
+    ),
+}
+
+
+def gpu_profile(repo, variant=""):
+    """Resolve a serving variant without changing the Hugging Face repository ID."""
+    if repo == MOG_SEC_REPO:
+        try:
+            return MOG_CONTEXT_PROFILES[variant or "64k"]
+        except KeyError:
+            raise ValueError("MOG_CONTEXT_PROFILE must be 64k or 1m.") from None
+    return GPU_PROFILES.get(repo)

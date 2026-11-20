@@ -44,7 +44,8 @@ def mog(settings, monkeypatch):
                 "text_config": {
                     "num_attention_heads": 24,
                     "max_position_embeddings": 1000000,
-                    "rope_parameters": {"rope_type": "yarn", "factor": 4.0},
+                    "rope_parameters": {"rope_type": "yarn", "factor": 4.0,
+                                        "original_max_position_embeddings": 262144},
                 },
             }
         )
@@ -74,17 +75,20 @@ def mog(settings, monkeypatch):
     return GPUManager(settings, State())
 
 
-def test_mog_inspection_preserves_checkpoint_but_caps_serving_context(mog):
+@pytest.mark.parametrize("variant,window,floor", [("64k", 65536, 72), ("1m", 1000000, 160)])
+def test_mog_inspection_preserves_checkpoint_but_caps_serving_context(mog, variant, window, floor):
+    mog.settings.options["MOG_CONTEXT_PROFILE"] = variant
     before = (mog.settings.root / "config.json").read_bytes()
     spec = mog.inspect_model()
     assert spec.repo == MOG_SEC_REPO and spec.revision == "a" * 40
     assert spec.backend == "vllm" and spec.weight_bytes == 55_563_006_776
-    assert spec.required_gib == 72 and spec.context_window == 32768
+    assert spec.required_gib == floor and spec.context_window == window
+    assert spec.profile_variant == variant
     assert spec.tool_parser == "qwen3_coder" and spec.reasoning_parser == "qwen3"
     assert len(spec.download_files) == 3
     assert (mog.settings.root / "config.json").read_bytes() == before
     catalog = model_catalog(spec.repo, ContextBudget(spec.context_window), "system")
-    assert catalog["models"][0]["context_window"] == 32768
+    assert catalog["models"][0]["context_window"] == window
 
 
 @pytest.mark.parametrize("memory", [24, 40, 48])
@@ -126,13 +130,19 @@ def test_mog_rejects_incompatible_specs_with_its_own_requirements(mog, row):
         mog.plan(80)
 
 
-async def test_mog_deployment_transmits_manifest_and_launches_32k_bf16(mog, monkeypatch):
+@pytest.mark.parametrize("variant,window,family,memory", [
+    ("64k", 65536, "h100", 80), ("1m", 1000000, "b200", 180),
+])
+async def test_mog_deployment_transmits_manifest_and_launches_selected_context(
+    mog, monkeypatch, variant, window, family, memory
+):
+    mog.settings.options["MOG_CONTEXT_PROFILE"] = variant
     mog.settings.options["LOCAL_MODEL_CONTEXT_WINDOWS"] = json.dumps({MOG_SEC_REPO: 1000000})
     mog.state.gpu_status = GPUStatus.RUNNING
-    mog.state.instance_type = "gpu_1x_h100_pcie"
+    mog.state.instance_type = f"gpu_1x_{family}"
     mog.state.instance_ip = "192.0.2.1"
     mog.state.gpu_count = 1
-    mog.state.total_vram_gib = 80
+    mog.state.total_vram_gib = memory
     captured = {}
 
     class Process:
@@ -161,7 +171,7 @@ async def test_mog_deployment_transmits_manifest_and_launches_32k_bf16(mog, monk
     monkeypatch.setattr(mog, "connect", AsyncMock())
     await mog.deploy()
     assert captured["repo"] == MOG_SEC_REPO and captured["gpus"] == 1
-    assert captured["context_window"] == 32768 and captured["max_num_seqs"] == 1
+    assert captured["context_window"] == window and captured["max_num_seqs"] == 1
     assert len(captured["download_files"]) == 3
     assert "@sha256:" in captured["image"]
 
@@ -176,7 +186,14 @@ async def test_mog_deployment_transmits_manifest_and_launches_32k_bf16(mog, monk
     serve_model.serve(captured)
     launch = commands[-1]
     assert launch[launch.index("--tensor-parallel-size") + 1] == "1"
-    assert launch[launch.index("--max-model-len") + 1] == "32768"
+    assert launch[launch.index("--max-model-len") + 1] == str(window)
+    if variant == "1m":
+        assert launch[launch.index("--kv-cache-dtype") + 1] == "fp8_e4m3"
+        assert launch[launch.index("--max-num-batched-tokens") + 1] == "2048"
+        assert "--enable-chunked-prefill" in launch and "--enable-prefix-caching" in launch
+        assert "--speculative-config" not in launch
+    else:
+        assert "--kv-cache-dtype" not in launch
     assert launch[launch.index("--mamba-ssm-cache-dtype") + 1] == "float32"
     assert launch[launch.index("--dtype") + 1] == "bfloat16"
     assert launch[launch.index("--tool-call-parser") + 1] == "qwen3_coder"
@@ -193,5 +210,187 @@ def test_mog_is_gpu_only_with_clear_context_and_startup_notice():
     assert settings.pi_model != MOG_SEC_REPO
     label = model_option_label(MOG_SEC_REPO)
     assert "Single 80 GB (H100)" in label and "55.6 GB" in label
-    assert "Harness context: 32K" in label and "1M context needs a separate" in label
-    assert "Estimated: 10–20 min fresh · 2–4 min cached" in label
+    assert "Harness context: 64K" in label and "new 64K limit" in label
+    assert "Projected: 10–20 min fresh · 2–4 min cached" in label
+
+
+def test_mog_profile_switch_invalidates_inspection_and_stale_launch_plan(mog):
+    mog._client = SimpleNamespace(catalog=lambda: {"offer": offer("H100", 80)})
+    plan = mog.plan(80)
+    assert plan.model.profile_variant == "64k"
+    mog.settings.options["MOG_CONTEXT_PROFILE"] = "1m"
+    with pytest.raises(ValueError, match="context profile changed"):
+        mog.launch(plan, approved=True)
+    assert not mog.state.launch_uncertain and not mog.state.instance_id
+    changed = mog.inspect_model()
+    assert changed.context_window == 1000000 and changed.required_gib == 160
+    assert changed is not plan.model
+    assert changed.revision == plan.model.revision and changed.download_files == plan.model.download_files
+
+
+def test_mog_1m_rejects_80gb_before_request_and_accepts_b200_plan(mog):
+    mog.settings.options["MOG_CONTEXT_PROFILE"] = "1m"
+    with pytest.raises(ValueError, match="160 GiB"):
+        mog.plan(80)
+    assert mog._client is None
+    mog._client = SimpleNamespace(catalog=lambda: {"offer": offer("B200", 180, ram=360)})
+    plan = mog.plan(180)
+    assert plan.model.context_window == 1000000 and plan.gpu_count == 1
+    with pytest.raises(PermissionError):
+        mog.launch(plan)
+    assert not mog.state.instance_id
+
+
+@pytest.mark.parametrize("field,value", [("max_position_embeddings", 262144),
+                                         ("rope_parameters", {"rope_type": "default"})])
+def test_mog_1m_checks_checkpoint_context_configuration_before_cloud(mog, field, value):
+    mog.settings.options["MOG_CONTEXT_PROFILE"] = "1m"
+    path = mog.settings.root / "config.json"
+    config = json.loads(path.read_text())
+    config["text_config"][field] = value
+    path.write_text(json.dumps(config))
+    with pytest.raises(ValueError, match="checkpoint|YaRN"):
+        mog.plan(180)
+    assert mog._client is None
+
+
+def test_invalid_mog_variant_fails_without_provider_access(mog):
+    mog.settings.options["MOG_CONTEXT_PROFILE"] = "invalid"
+    with pytest.raises(ValueError, match="64k or 1m"):
+        mog.plan(180)
+    assert mog._client is None
+
+
+@pytest.mark.parametrize("variant,window,compact,timeout", [
+    ("64k", 65536, 49152, 600), ("1m", 1000000, 750000, 3600),
+])
+def test_mog_engine_uses_selected_budget_and_timeout(mog, variant, window, compact, timeout):
+    from velocicyber.engine.runner import Engine
+
+    mog.settings.options.update(MOG_CONTEXT_PROFILE=variant,
+                               LOCAL_MODEL_CONTEXT_WINDOWS=json.dumps({MOG_SEC_REPO: 32768}))
+    mog.state.active_provider = "local"
+    engine = Engine(mog.settings, mog.state)
+    assert engine.context_budget().window == window
+    assert engine.context_budget().compact_at == compact
+    assert engine.response_timeout() == timeout
+    mog.state.active_provider = "api"
+    assert engine.response_timeout() == 600
+    mog.state.active_provider = "pi"
+    assert engine.response_timeout() == 1800
+
+
+@pytest.mark.parametrize("variant,reported,ready", [
+    ("1m", 65536, False), ("64k", 1000000, False), ("64k", 32768, False),
+    ("1m", None, False), ("1m", 1000000, True), ("64k", 65536, True),
+])
+async def test_mog_readiness_requires_actual_selected_context(mog, monkeypatch, variant, reported, ready):
+    import httpx
+
+    # Include a stale inspection cache from the other variant.
+    mog.settings.options["MOG_CONTEXT_PROFILE"] = "64k" if variant == "1m" else "1m"
+    mog.inspect_model()
+    mog.settings.options["MOG_CONTEXT_PROFILE"] = variant
+    mog.tunnel = SimpleNamespace(returncode=None)
+    calls = []
+
+    def respond(request):
+        calls.append(request.url.path)
+        if request.url.path == "/health":
+            return httpx.Response(200)
+        if request.url.path == "/v1/models":
+            return httpx.Response(200, json={"data": [{"id": MOG_SEC_REPO, "max_model_len": reported}]})
+        return httpx.Response(200, json={"choices": [{"message": {"content": "OK"}}]})
+
+    client = httpx.AsyncClient
+    monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: client(**kw, transport=httpx.MockTransport(respond)))
+    monkeypatch.setattr(mog, "check_tools", AsyncMock())
+    if ready:
+        assert await mog.check_ready()
+        assert mog.state.model_context_window == reported
+        mog.check_tools.assert_awaited_once()
+    else:
+        with pytest.raises(RuntimeError, match="Select MOG in /local to reload"):
+            await mog.check_ready()
+        assert not mog.state.model_ready
+        assert mog.state.model_context_window == 0
+        assert calls == ["/health", "/v1/models"]
+        mog.check_tools.assert_not_awaited()
+
+
+async def test_mog_1m_menu_details_cancel_then_confirm_without_launch(mog):
+    from velocicyber.ui.app import VelocicyberApp
+
+    mog.settings.options["LOCAL_MODEL_OPTIONS"] = MOG_SEC_REPO
+    mog.settings.local_model = ""
+    app = VelocicyberApp(mog.settings)
+    async with app.run_test(size=(100, 35)) as pilot:
+        await pilot.press("slash", *"local", "enter", *"m.o.g.", "enter")
+        assert app.screen.id == "mog-context"
+        await pilot.press(*"1 million", "enter", *"more", "enter")
+        assert "160 GiB" in app.screen.details and "FP8" in app.screen.details
+        assert "15–35 min" in app.screen.details and "750K" in app.screen.details
+        assert "unvalidated" in app.screen.details and "64K" not in app.screen.heading
+        assert not mog.settings.local_model
+        assert mog.settings.options.get("MOG_CONTEXT_PROFILE", "64k") == "64k"
+        await pilot.press("escape")
+        assert not mog.settings.local_model and app.gpu._client is None
+        app.review_local_model(MOG_SEC_REPO)
+        await pilot.pause()
+        await pilot.press(*"1m", "enter", *"confirm", "enter")
+        assert mog.settings.local_model == MOG_SEC_REPO
+        assert mog.settings.options["MOG_CONTEXT_PROFILE"] == "1m"
+        assert not app.state.model_ready and app.state.active_provider == "api"
+        assert app.gpu._client is None and app.conversation
+        await pilot.press("slash", *"gpu", "enter", *"on", "enter")
+        assert "Experimental MOG 1M" in app.screen.heading
+        assert "160 GiB" in app.screen.heading
+        await pilot.press("escape")
+        assert app.gpu._client is None and not app.state.instance_id
+
+
+@pytest.mark.parametrize("previous,chosen,memory,loads", [
+    ("64k", "1m", 80, False), ("64k", "1m", 180, True), ("1m", "64k", 180, True),
+])
+async def test_mog_switch_reloads_or_preserves_working_profile_on_small_gpu(
+    mog, monkeypatch, previous, chosen, memory, loads
+):
+    from velocicyber.models.gpu_profiles import MOG_CONTEXT_PROFILES
+    from velocicyber.ui.app import VelocicyberApp
+
+    mog.settings.options["MOG_CONTEXT_PROFILE"] = previous
+    app = VelocicyberApp(mog.settings)
+    async with app.run_test() as pilot:
+        app.state.gpu_status = GPUStatus.RUNNING
+        app.state.instance_type = "gpu_1x_b200" if memory == 180 else "gpu_1x_h100"
+        app.state.gpu_count = 1
+        app.state.total_vram_gib = memory
+        app.state.model_ready = True
+        app.state.model_context_window = MOG_CONTEXT_PROFILES[previous].context_window
+        app.state.model_context_model = MOG_SEC_REPO
+        app.state.active_provider = "local"
+        monkeypatch.setattr(app.gpu, "refresh", lambda: "active")
+        monkeypatch.setattr(app, "load_model", AsyncMock())
+        app.select_local_model(MOG_SEC_REPO, mog_context=chosen)
+        await app.workers.wait_for_complete()
+        await pilot.pause()
+        if loads:
+            app.load_model.assert_awaited_once()
+            assert mog.settings.options["MOG_CONTEXT_PROFILE"] == chosen
+            assert not app.state.model_ready
+        else:
+            app.load_model.assert_not_awaited()
+            assert mog.settings.options["MOG_CONTEXT_PROFILE"] == previous
+            assert app.state.model_ready and app.state.active_provider == "local"
+        assert app.gpu._client is None
+
+
+@pytest.mark.parametrize("window,label", [(65536, "64K context"), (1000000, "1M context")])
+def test_mog_dashboard_shows_served_context(mog, window, label):
+    from velocicyber.ui.dashboard import dashboard_text
+
+    mog.state.gpu_status = GPUStatus.RUNNING
+    mog.state.model_ready = True
+    mog.state.model_context_window = window
+    mog.state.model_context_model = MOG_SEC_REPO
+    assert "Ready for coding · " + label in dashboard_text(mog.settings, mog.state).plain

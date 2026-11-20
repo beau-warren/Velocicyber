@@ -13,7 +13,7 @@ from pathlib import Path
 import httpx
 
 from velocicyber.engine.context import ContextBudget, served_context_window
-from velocicyber.models.gpu_profiles import GPU_PROFILES
+from velocicyber.models.gpu_profiles import GPU_PROFILES, MOG_SEC_REPO, gpu_profile
 from velocicyber.models.pi_profiles import PI_PROFILES
 from velocicyber.providers.huggingface import model_download_token
 from velocicyber.state import GPUStatus
@@ -70,12 +70,17 @@ class ModelSpec:
     architecture: str = ""
     context_window: int = 0
     download_files: tuple[dict, ...] = ()
+    profile_variant: str = ""
+
+    @property
+    def profile(self):
+        return gpu_profile(self.repo, self.profile_variant)
 
     @property
     def required_gib(self):
         # Lower bound with working space. Serving validation is still required.
         estimate = math.ceil(self.weight_bytes / 2**30 * 1.20 + 4)
-        profile = GPU_PROFILES.get(self.repo)
+        profile = self.profile
         return max(estimate, profile.minimum_vram_gib) if profile else estimate
 
 
@@ -176,19 +181,23 @@ class GPUManager:
         except OSError:
             pass  # Reporting an error must not hide it when diagnostic storage is unavailable.
 
-    def inspect_model(self, repo=None):
+    def inspect_model(self, repo=None, *, profile_variant=None):
         repo = repo or self.settings.local_model
         if not repo:
             raise ValueError("Choose a GPU model in /local before loading or uploading it.")
         if repo in PI_PROFILES:
             raise ValueError("This Raspberry Pi model uses the local CPU runtime, not Lambda GPUs.")
+        profile = (
+            self.settings.gpu_profile(repo) if profile_variant is None
+            else gpu_profile(repo, profile_variant)
+        )
         token = model_download_token(self.settings)
-        if self.spec and self.spec.repo == repo:
+        if (self.spec and self.spec.repo == repo
+                and self.spec.profile_variant == (profile.variant if profile else "")):
             return self.spec
         from huggingface_hub import HfApi, hf_hub_download
 
         info = HfApi(token=token).model_info(repo, files_metadata=True)
-        profile = GPU_PROFILES.get(repo)
         ggufs = [f for f in info.siblings if f.rfilename.endswith(".gguf")]
         if profile and profile.gguf_filename:
             ggufs = [f for f in ggufs if f.rfilename == profile.gguf_filename]
@@ -260,7 +269,6 @@ class GPUManager:
         )
         config = json.loads(Path(path).read_text())
         family = config.get("model_type", "")
-        profile = GPU_PROFILES.get(repo)
         if profile and family != profile.family:
             raise ValueError("Model architecture changed; review its GPU serving profile first.")
         parsers = {
@@ -301,7 +309,16 @@ class GPUManager:
                 ):
                     raise ValueError("Model file sizes and weight SHA256 metadata are required.")
                 files.append({"filename": file.rfilename, "size": file.size, "sha256": checksum})
-        context_window = int(config.get("text_config", config).get("max_position_embeddings", 0))
+        text_config = config.get("text_config", config)
+        context_window = int(text_config.get("max_position_embeddings", 0))
+        if repo == MOG_SEC_REPO:
+            if context_window < profile.context_window:
+                raise ValueError("MOG checkpoint does not support the selected context window.")
+            if profile.variant == "1m":
+                rope = text_config.get("rope_parameters", {})
+                if (rope.get("rope_type") != "yarn" or rope.get("factor") != 4.0
+                        or rope.get("original_max_position_embeddings") != 262144):
+                    raise ValueError("MOG 1M requires the checkpoint's reviewed YaRN configuration.")
         if profile:
             context_window = min(context_window or profile.context_window, profile.context_window)
         self.spec = ModelSpec(
@@ -315,6 +332,7 @@ class GPUManager:
             architecture=family,
             context_window=context_window,
             download_files=tuple(files),
+            profile_variant=profile.variant if profile else "",
         )
         return self.spec
 
@@ -342,7 +360,7 @@ class GPUManager:
                 f"{memory} GB is too small. No instance launched."
             )
         preferred_region = self.settings.options.get("LAMBDA_REGION", "auto") or "auto"
-        profile = GPU_PROFILES.get(spec.repo)
+        profile = spec.profile
         if profile:
             self.serving_image(spec)  # Missing runtime pin must block before paid launch.
         from velocicyber.providers.pricing import cache_catalog_prices
@@ -400,8 +418,10 @@ class GPUManager:
         self.settings.download_policy()
         if self.state.instance_id or self.state.launch_uncertain:
             raise RuntimeError("An existing or unresolved launch must be reconciled first.")
-        if time.time() - plan.created_at > 300 or plan.model.repo != self.settings.local_model:
-            raise ValueError("Launch plan expired or model changed. Prepare a new plan.")
+        selected_profile = self.settings.gpu_profile()
+        if (time.time() - plan.created_at > 300 or plan.model.repo != self.settings.local_model
+                or plan.model.profile_variant != (selected_profile.variant if selected_profile else "")):
+            raise ValueError("Launch plan expired or model/context profile changed. Prepare a new plan.")
         model_download_token(self.settings)  # Recheck before requesting paid resources.
         self.state.instance_type, self.state.region = plan.instance_type, plan.region
         self.state.gpu_count = plan.gpu_count
@@ -579,7 +599,7 @@ class GPUManager:
         self.validate_loaded_hardware(spec)
         token = await asyncio.to_thread(model_download_token, self.settings)
         self.state.model_revision = spec.revision
-        profile = GPU_PROFILES.get(spec.repo)
+        profile = spec.profile
         script = (self.settings.root / "scripts/runtime/serve_model.py").read_text()
         if spec.backend == "tensorfold":
             script += "\n" + (self.settings.root / "scripts/runtime/tensorfold_runtime.py").read_text()
@@ -689,7 +709,7 @@ class GPUManager:
         return self.settings.options.get("VLLM_IMAGE", lock["vllm_image"])
 
     def validate_loaded_hardware(self, spec):
-        profile = GPU_PROFILES.get(spec.repo)
+        profile = spec.profile
         if profile and not profile.supports_hardware(
             self.state.instance_type, self.state.gpu_count
         ):
@@ -775,11 +795,19 @@ class GPUManager:
                         self.spec
                         and self.spec.repo == self.settings.local_model
                         and self.spec.context_window
+                        and self.spec.profile == self.settings.gpu_profile()
                     ):
                         configured_window = min(configured_window, self.spec.context_window)
-                    self.state.model_context_window = (
-                        served_context_window(served_model) or configured_window
-                    )
+                    served_window = served_context_window(served_model)
+                    if self.settings.local_model == MOG_SEC_REPO and served_window != configured_window:
+                        self.state.model_context_window = 0
+                        self.state.model_context_model = ""
+                        raise RuntimeError(
+                            f"MOG server context is {served_window or 'unknown'}; selected profile "
+                            f"requires {configured_window} tokens. Select MOG in /local to reload "
+                            "the chosen context profile on compatible GPUs."
+                        )
+                    self.state.model_context_window = served_window or configured_window
                     self.state.model_context_model = self.settings.local_model
                     # One small inference validates readiness after model loading. Failure
                     # stops the workflow instead of repeatedly spending generation tokens.

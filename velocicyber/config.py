@@ -155,9 +155,16 @@ class Settings:
             raise ValueError(f"{key} must be an integer from 1 to 65536.")
         return value
 
+    def gpu_profile(self, model=None):
+        from velocicyber.models.gpu_profiles import MOG_SEC_REPO, gpu_profile
+
+        repo = model or self.local_model
+        variant = self.options.get("MOG_CONTEXT_PROFILE", "64k") if repo == MOG_SEC_REPO else ""
+        return gpu_profile(repo, variant)
+
     def local_context_window(self, model=None):
         from velocicyber.engine.context import DEFAULT_CONTEXT_WINDOW, ContextBudget
-        from velocicyber.models.gpu_profiles import GPU_PROFILES
+        from velocicyber.models.gpu_profiles import MOG_SEC_REPO
 
         try:
             profiles = json.loads(self.options.get("LOCAL_MODEL_CONTEXT_WINDOWS", "{}"))
@@ -168,8 +175,10 @@ class Settings:
         for value in profiles.values():
             ContextBudget(value)
         repo = model or self.local_model
-        default = GPU_PROFILES[repo].context_window if repo in GPU_PROFILES else DEFAULT_CONTEXT_WINDOW
-        return profiles.get(repo, default)
+        profile = self.gpu_profile(repo)
+        default = profile.context_window if profile else DEFAULT_CONTEXT_WINDOW
+        # The explicit MOG selection wins over legacy per-repository overrides.
+        return default if repo == MOG_SEC_REPO else profiles.get(repo, default)
 
     @property
     def runtime(self):

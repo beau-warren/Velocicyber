@@ -257,7 +257,11 @@ class Engine:
 
     def response_timeout(self):
         seconds = self.settings.provider_read_timeout()
-        return max(1800, seconds) if self.state.active_provider == "pi" else seconds
+        if self.state.active_provider == "pi":
+            return max(1800, seconds)
+        if self.state.active_provider == "local" and (profile := self.settings.gpu_profile()):
+            return max(profile.response_timeout_seconds, seconds)
+        return seconds
 
     @property
     def selected_model(self):

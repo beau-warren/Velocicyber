@@ -138,7 +138,9 @@ async def test_ready_requires_parsed_tool_call_without_executing_it(
         if request.url.path == "/health":
             return httpx.Response(200)
         if request.url.path == "/v1/models":
-            return httpx.Response(200, json={"data": [{"id": repo, "max_model_len": 32768}]})
+            return httpx.Response(200, json={"data": [{
+                "id": repo, "max_model_len": blackfrost.settings.local_context_window(),
+            }]})
         payload = json.loads(request.content)
         message = {"content": "OK"}
         if "tools" in payload and tool_ok:

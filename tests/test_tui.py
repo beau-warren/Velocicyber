@@ -1158,7 +1158,8 @@ async def test_mog_selection_filters_separately_and_shows_single_gpu_guidance(se
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.press("backslash", *"local", "enter", *"m.o.g.", "enter")
         assert settings.local_model != MOG_SEC_REPO and app.gpu._client is None
-        await pilot.press(*"more", "enter")
+        assert app.screen.id == "mog-context"
+        await pilot.press(*"64k", "enter", *"more", "enter")
         assert "10–20 min" in app.screen.details
         assert "Download to a running GPU: ~2–5 min" in app.screen.details
         assert "Single 80 GB (H100)" in app.screen.details
@@ -1169,7 +1170,7 @@ async def test_mog_selection_filters_separately_and_shows_single_gpu_guidance(se
         assert app.state.active_provider == "api" and app.gpu._client is None
         await pilot.press("backslash", *"gpu", "enter", *"on", "enter")
         assert "Single 80 GB (H100)" in app.screen.heading
-        assert "Harness context: 32K" in app.screen.heading
+        assert "Harness context: 64K" in app.screen.heading
         app.screen.query_one("#menu-filter", Input).value = "single 80"
         await pilot.pause()
         assert str(app.screen.query_one(OptionList).highlighted_option.prompt) == (

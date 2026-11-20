@@ -13,10 +13,10 @@ from velocicyber.models.gpu_profiles import (
     CYBER_FROST_REPO,
     FLINT_REPO,
     GLM53_EXL3_REPO,
-    GPU_PROFILES,
     MOG_SEC_REPO,
     ORCACYBER_REPO,
     SAGE_REPO,
+    gpu_profile,
 )
 from velocicyber.models.pi_profiles import BUGTRACE_PI_REPO, LFM3_PI_REPO, PI_PROFILES
 
@@ -36,10 +36,12 @@ ESTIMATES = {
     FLINT_REPO: StartupEstimate("35–70 min", "3–6 min", projected=True),
     SAGE_REPO: StartupEstimate("15–30 min", "3–8 min", projected=True),
     CYBER_FROST_REPO: StartupEstimate("6–14 hours", "10–30 min", projected=True),
-    MOG_SEC_REPO: StartupEstimate("10–20 min", "2–4 min"),
+    MOG_SEC_REPO: StartupEstimate("10–20 min", "2–4 min", projected=True),
     GLM53_EXL3_REPO: StartupEstimate("25–60 min", "5–15 min", projected=True),
     ORCACYBER_REPO: StartupEstimate("25–50 min", "2–5 min", projected=True),
 }
+
+MOG_LONG_STARTUP = StartupEstimate("15–35 min", "4–10 min", projected=True)
 
 MENU_HELP = (
     "Fresh: GPU boot + download + ready for coding.\n"
@@ -48,7 +50,7 @@ MENU_HELP = (
 )
 
 
-def model_option_label(repo, *, ready=False):
+def model_option_label(repo, *, ready=False, variant=""):
     if repo in PI_PROFILES:
         return (
             repo
@@ -62,20 +64,21 @@ def model_option_label(repo, *, ready=False):
                 else "\nFirst use: 11.4 GiB weights + CPU runtime setup; then local loading."
             )
         )
-    if estimate := ESTIMATES.get(repo):
+    estimate = MOG_LONG_STARTUP if repo == MOG_SEC_REPO and variant == "1m" else ESTIMATES.get(repo)
+    if estimate:
         detail = estimate.label()
     else:
         detail = "Startup estimate unavailable for this model"
     if ready:
         detail += "\nReady now — already loaded"
-    if profile := GPU_PROFILES.get(repo):
+    if profile := gpu_profile(repo, variant):
         detail = profile.notice + "\n" + detail
     return repo + "\n" + detail
 
 
-def model_details(repo, *, ready=False):
+def model_details(repo, *, ready=False, variant=""):
     """Offline model information for the details view, separate from picker labels."""
-    summary = model_option_label(repo, ready=ready).partition("\n")[2]
+    summary = model_option_label(repo, ready=ready, variant=variant).partition("\n")[2]
     if repo == LFM3_PI_REPO:
         return (
             summary + "\n\nHardware: Raspberry Pi 5 (Linux ARM64); about 4 GiB available RAM "
@@ -109,7 +112,7 @@ def model_details(repo, *, ready=False):
             "Startup time: no measured estimate yet; first download and CPU runtime "
             "build depend on the network and local storage."
         )
-    if profile := GPU_PROFILES.get(repo):
+    if profile := gpu_profile(repo, variant):
         hardware = (
             f"Estimated minimum VRAM: {profile.minimum_vram_gib} GiB total.\n"
             + profile.hardware_requirements()
@@ -117,14 +120,30 @@ def model_details(repo, *, ready=False):
     else:
         hardware = "Lambda GPU required. Exact hardware requirements are checked before launch."
     timing = (
-        "\n\nDownload to a running GPU: ~2–5 min on the tested fast connection.\n"
+        "\n\nEarlier 32K run (selected profile timings remain projected):\n"
+        "Download to a running GPU: ~2–5 min on the tested fast connection.\n"
         "Download + loading until ready: ~5–10 min with the serving image available.\n"
         "Observed on H100 SXM5 (2026-10-08): 55.6 GB transferred in ~2 min 13 sec; "
-        "server initialization ~2 min 18 sec. One run, not a guarantee.\n"
+        "server initialization ~2 min 18 sec at 32K. One run, not a guarantee.\n"
         "Fresh startup estimate allows normal boot time; capacity waits, slow boots "
         "and a first container-image download can add time."
         if repo == MOG_SEC_REPO else ""
     )
+    if repo == MOG_SEC_REPO:
+        timing += (
+            "\nBoth profiles reuse the same weights; cached files are verified before reuse."
+            "\nSwitching context restarts inference and requires compatible hardware."
+            "\nContext includes input, reasoning, tool results and output."
+            "\nAutomatic compaction starts at 75%: 49,152 tokens for 64K; 750,000 for 1M."
+        )
+        if variant == "1m":
+            timing += (
+                "\n\n1M startup figures are projections from the earlier 32K transfer, not measurements."
+                "\nInitial long-prompt processing is additional and may take many minutes."
+                "\nUses pinned vLLM with chunked prefill, prefix caching and no speculative drafter."
+                "\nGeneration read timeout: at least 60 minutes; Ctrl+X still interrupts."
+                "\nA successful small readiness probe does not validate full 1M accuracy or stability."
+            )
     if repo == GLM53_EXL3_REPO:
         timing = (
             "\n\nTransfer only: ~7–20 min on a fast GPU-host connection; unmeasured.\n"

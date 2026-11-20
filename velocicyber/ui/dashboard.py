@@ -2,6 +2,7 @@
 
 from rich.text import Text
 
+from velocicyber.models.gpu_profiles import MOG_SEC_REPO
 from velocicyber.providers import temperature
 from velocicyber.sentinel.profiles import sentinel_profile
 from velocicyber.state import GPUStatus
@@ -42,6 +43,9 @@ def dashboard_text(settings, state, *, restoring_gpu=False, sentinel_busy=False,
         readiness = "Waiting for shutdown confirmation"
     elif state.model_ready:
         readiness = "Ready for coding"
+        if settings.local_model == MOG_SEC_REPO and state.model_context_window:
+            context = "1M" if state.model_context_window == 1000000 else f"{state.model_context_window // 1024}K"
+            readiness += f" · {context} context"
     elif state.gpu_status == GPUStatus.RUNNING and state.model_stage:
         if state.model_stage == "download" and state.download_total:
             percent = min(100, state.download_bytes * 100 // state.download_total)
