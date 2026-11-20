@@ -1,8 +1,11 @@
 import json
 import shutil
+import tomllib
+from pathlib import Path
 
 import httpx
 import pytest
+from packaging.requirements import Requirement
 
 from velocicyber.engine.installation import engine_lease
 from velocicyber.updates import UpdateChecker
@@ -326,3 +329,59 @@ def test_explicit_rollback_disables_automatic_reapplication(source_update):
     assert updater.settings.options["AUTO_UPDATE_HARNESS"] == "OFF"
     assert "AUTO_UPDATE_HARNESS=OFF" in (updater.root / "Modules.txt").read_text()
     assert (updater.root / "app.py").read_text() == "old"
+
+
+def test_legacy_updater_receives_build_requirements_in_dependency_lock():
+    # Older updaters install this lock, then activate with --no-build-isolation.
+    # PEP 517's temporary build environment does not supply that backend later.
+    root = Path(__file__).resolve().parents[1]
+    project = tomllib.loads((root / "pyproject.toml").read_text())
+    locked = {req.name: req for line in (root / "requirements.lock").read_text().splitlines()
+              if line.strip() and not line.startswith("#") for req in [Requirement(line)]}
+    for value in project["build-system"]["requires"]:
+        requirement = Requirement(value)
+        pin = locked[requirement.name]
+        specs = list(pin.specifier)
+        assert len(specs) == 1 and specs[0].operator == "=="
+        assert specs[0].version in requirement.specifier
+
+
+@pytest.mark.parametrize("build_failure", [False, True])
+def test_dependency_build_is_checked_before_tests_or_activation(source_update, monkeypatch, build_failure):
+    updater, _, source = source_update
+    (source / "requirements.lock").write_text("build-fixture==1\n")
+    run = updater.runtime / "build-validation"
+    run.mkdir()
+    calls = []
+
+    def command(arguments, folder, log, **kwargs):
+        calls.append(arguments)
+        if "pip" in arguments and "-e" in arguments and build_failure:
+            raise RuntimeError("Build backend unavailable")
+        if "pytest" in arguments:
+            (run / "tests.xml").write_text("<testsuite><testcase/></testsuite>")
+
+    monkeypatch.setattr(updater, "command", command)
+    if build_failure:
+        with pytest.raises(RuntimeError, match="Build backend unavailable"):
+            SourceUpdater.validate(updater, source, run)
+        assert not any("pytest" in args for args in calls)
+    else:
+        assert SourceUpdater.validate(updater, source, run) is True
+        assert "pytest" in calls[-1]
+    editable = next(args for args in calls if "-e" in args)
+    assert "--no-deps" in editable and "--no-build-isolation" in editable
+    assert editable[-2:] == ["-e", "."]
+    assert (updater.root / "app.py").read_text() == "old"
+    assert not (updater.runtime / PENDING).exists()
+    assert_private_preserved(updater.root)
+
+
+def test_managed_environment_symlink_does_not_count_as_local_source_changes(settings):
+    root = settings.root
+    git(root, "init", "-b", "main")
+    shutil.copy2(Path(__file__).resolve().parents[1] / ".gitignore", root / ".gitignore")
+    environment = settings.runtime / "validated-venv"
+    environment.mkdir()
+    (root / ".venv").symlink_to(environment, target_is_directory=True)
+    assert git(root, "status", "--porcelain", "--untracked-files=all", "--", ".venv") == ""

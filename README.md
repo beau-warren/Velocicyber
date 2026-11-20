@@ -198,7 +198,8 @@ predictions are not verified labels. See [data handling](docs/usage.md#data-and-
 The harness uses a separately installed official Open Interpreter engine.
 The launch-time indicator checks both Velocicyber source and the engine. `/update`
 selects whichever components have verified updates, asks for approval, and tests
-them before activation. To automatically install tested **repo updates on launch**,
+them before activation, including the Python build dependencies needed to finish
+installation. To automatically install tested **repo updates on launch**,
 enable the option in `/update` (OFF by default). Engine upgrades always need manual
 approval. Inspect `/updates-info` when a check fails. See
 [updating and rollback](docs/installation.md#updates-and-rollback).

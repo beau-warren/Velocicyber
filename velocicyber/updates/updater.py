@@ -126,7 +126,10 @@ class SourceUpdater:
             self.command(["python3", "-m", "venv", str(venv)], source, run / "install.log")
             python = venv / "bin/python"
             self.command([str(python), "-m", "pip", "install", "-r", "requirements.lock"], source, run / "install.log")
-            self.command([str(python), "-m", "pip", "install", "--no-deps", "-e", "."], source, run / "install.log")
+            # Match activation's build mode while the active install is untouched.
+            # The lock includes build requirements for older updaters as well.
+            self.command([str(python), "-m", "pip", "install", "--no-deps", "--no-build-isolation", "-e", "."],
+                         source, run / "install.log")
         env = clean_environment()
         env.update(PYTHONPATH=str(source), PYTHONDONTWRITEBYTECODE="1", PYTEST_DISABLE_PLUGIN_AUTOLOAD="1")
         try:

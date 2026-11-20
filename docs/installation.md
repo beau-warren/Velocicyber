@@ -186,7 +186,11 @@ Proceeding closes the session, stops Pi inference and terminates its managed GPU
 Engine updates keep their existing compatibility gate and conversation backup.
 Harness updates stage the exact source revision and run its offline test suite
 before changing the active files. Changed Python dependencies are built and tested
-in a separate environment. When both need an update, the engine is updated first,
+in a separate environment. The dependency lock includes the Python build backend;
+staging checks the same build mode used during activation. If an older update
+rolled back with `Cannot import 'setuptools.build_meta'`, retry against the latest
+repo revision: it supplies the missing dependency through the existing updater.
+When both need an update, the engine is updated first,
 then the candidate harness is tested against it. Components have separate rollback
 points; if the second fails, the first successful update remains installed.
 
