@@ -100,14 +100,18 @@ a repository name alone does not establish support.
 
 ## ![Quick start](assets/docs/headings/h2-quick-start.svg)
 
-After downloading or cloning this repository:
+For a new installation with Git:
 
 ```bash
+git clone https://github.com/beau-warren/Velocicyber.git
+cd Velocicyber
 ./install.sh
 ./velocicyber.sh
 ```
 
-The Python installer needs Python 3.11+ with `venv` and internet access. The
+The Python installer needs Python 3.11+ with `venv` and internet access. Closed
+access also needs Bubblewrap (`sudo apt install bubblewrap` on Raspberry Pi OS/Debian)
+and working Linux user namespaces; `./velocicyber.sh doctor` checks support. The
 execution engine is installed separately during optional setup. Pi runtime builds
 also need Git, CMake and a C++ compiler; the Adverserial API client needs Node.js
 and npm. See [installation](docs/installation.md) for platform requirements.
@@ -124,7 +128,8 @@ Setup also offers Lambda SSH key-name and private-key selection/import; see [SSH
 On Linux desktops, setup also offers an optional [desktop launcher and neon V icon](docs/installation.md#desktop-shortcut); press Enter to skip.
 
 For a download without Git, use the [curl installation instructions](docs/installation.md#download-with-curl).
-Downloading requires GitHub read access.
+Public downloads need no GitHub token. Private copies require repository access;
+the installation guide covers both.
 
 To inspect setup or try the interface without provider requests:
 

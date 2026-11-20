@@ -38,7 +38,11 @@ an unavailable model is never silently routed to another one.
 
 ## ![Lambda GPU setup](../assets/docs/headings/h2-lambda-gpu-setup.svg)
 
-Add your own Lambda SSH private key under `ssh-keys/`, set its mode to `0600`, and register the matching public key with Lambda. Set `LAMBDA_SSH_KEY_NAME` and `SSH_PRIVATE_KEY` in your local `Modules.txt`. Leave `LAMBDA_REGION` blank to select according to availability, or set your preferred region.
+Use `/setup` to enter your registered Lambda SSH key name and select/import its
+private key with `0600` permissions. Register the matching public key with Lambda
+first. See [SSH setup](../ssh-keys/README.md) for details and manual configuration.
+Leave `LAMBDA_REGION` blank in `Modules.txt` to select according to availability,
+or set your preferred region.
 
 Review requirements and startup estimates under `/local` → **More Details**,
 then choose compatible capacity through `/gpu`. Launch confirmation

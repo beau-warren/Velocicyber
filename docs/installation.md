@@ -34,7 +34,34 @@ closed tasks and never silently switch to Open access.
 
 The standalone `bootstrap.py` downloads this repository, resolves the requested version to a specific commit, and runs `install.sh` in a **new directory**. It requires curl and Python 3.11+, needs no Git checkout, and refuses to overwrite an existing directory. It does not launch the harness or download models. Git is still needed later for local model runtime builds.
 
-**While the repository is private:** use a GitHub token with read access to this repository (a fine-grained token needs **Contents: read**). Paste this block into Bash; the token is entered invisibly, sent to curl through stdin, and is not saved in the installation:
+**Public download — no GitHub token required:**
+
+```bash
+(
+  set -e
+  vc_installer=$(mktemp)
+  trap 'rm -f "$vc_installer"' EXIT
+  curl -q --fail --silent --show-error --proto '=https' --connect-timeout 15 --max-time 180 \
+    --output "$vc_installer" \
+    https://raw.githubusercontent.com/beau-warren/Velocicyber/main/bootstrap.py
+  python3 "$vc_installer"
+)
+```
+
+Then launch `~/Velocicyber/velocicyber.sh` for credential and dataset setup. Change
+`--dir` to choose a different new directory. Add `--download-only` to save source
+without installing Python dependencies, or `--ref TAG_OR_COMMIT` to choose a
+version. Existing installations are preserved; this downloader is not an in-place
+updater. A failed dependency installation keeps the source so you can rerun its
+`install.sh`.
+
+<details>
+<summary>Downloading a private repository</summary>
+
+For a private copy, use a GitHub token with repository read access (a fine-grained
+token needs **Contents: read**). The public command above cannot access private
+repositories. This Bash alternative hides token entry, sends it to curl through
+stdin, and does not save it in the installation:
 
 ```bash
 (
@@ -53,23 +80,11 @@ The standalone `bootstrap.py` downloads this repository, resolves the requested 
 )
 ```
 
-Then launch `~/Velocicyber/velocicyber.sh` for credential and dataset setup. Change `--dir` to choose a different new directory. Add `--download-only` to save source without installing Python dependencies, or `--ref TAG_OR_COMMIT` to choose a version. Existing installations are preserved; this downloader is not an in-place updater. A failed dependency installation keeps the source so you can rerun its `install.sh`.
+</details>
 
-**For a public copy of this repository**, authentication can be omitted:
-
-```bash
-(
-  set -e
-  vc_installer=$(mktemp)
-  trap 'rm -f "$vc_installer"' EXIT
-  curl -q --fail --silent --show-error --proto '=https' --connect-timeout 15 --max-time 180 \
-    --output "$vc_installer" \
-    https://raw.githubusercontent.com/beau-warren/Velocicyber/main/bootstrap.py
-  python3 "$vc_installer"
-)
-```
-
-The public command will not work while this repository is private. Downloads rely on GitHub over HTTPS; the source revision is recorded in `.runtime/source-install.json`. The bootstrap entrypoint follows `main`; inspect it before execution if you need a reviewed installer.
+Downloads rely on GitHub over HTTPS; the source revision is recorded in
+`.runtime/source-install.json`. The bootstrap entrypoint follows `main`; inspect
+it before execution if you need a reviewed installer.
 
 <a name="first-run-setup"></a>
 
@@ -242,7 +257,8 @@ Source/environment backups and validation logs remain under
 `.runtime/harness-updates/`. If an update was interrupted during activation, use
 `update --rollback-harness` to recover before starting a session.
 
-While this repository is private, add `GITHUB_API` to the installation's local
-`.env`, using a GitHub token with **Contents: read** access. It is used only for
-repository requests and is not passed to the model or saved in Git remotes. Keep
-`.env` at `0600`. Once the repository is public, the token is optional.
+Public-repository update checks and downloads do not require a GitHub token.
+For private copies, add `GITHUB_API` to the installation's local `.env` with
+**Contents: read** access to that repository. It is used only for repository
+requests and is not passed to the model or saved in Git remotes. Keep `.env` at
+`0600`. GitHub rate limits can still affect anonymous requests.
