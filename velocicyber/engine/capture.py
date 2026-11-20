@@ -13,13 +13,13 @@ import threading
 import time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlsplit
 
 import httpx
 
 from velocicyber.config import API_MODELS
 from velocicyber.engine.context import is_compaction_request
 from velocicyber.engine.tool_schemas import repair_tool_schemas
+from velocicyber.providers.transport import is_loopback_url, validate_inference_url
 
 
 class ResponseLengthError(ValueError):
@@ -156,12 +156,12 @@ class CaptureProxy:
         default_max_tokens=None,
         reject_malformed_tool_history=False,
     ):
-        self.base_url = base_url.rstrip("/")
+        self.base_url = validate_inference_url(base_url).rstrip("/")
         self.api_key = api_key
         self.local_key = secrets.token_urlsafe(32)
         self.events = []
         self.health = "unverified"
-        local = urlsplit(self.base_url).hostname in {"localhost", "127.0.0.1", "::1"}
+        local = is_loopback_url(self.base_url)
         connection_options = (
             {"limits": httpx.Limits(max_keepalive_connections=0), "trust_env": False}
             if local else {}
@@ -170,7 +170,7 @@ class CaptureProxy:
         # Open a fresh local connection without replaying any model request.
         self.client = httpx.Client(
             timeout=httpx.Timeout(read_timeout, connect=15, write=30, pool=15),
-            transport=transport, **connection_options,
+            transport=transport, follow_redirects=False, **connection_options,
         )
         self.server = None
         self.on_progress = on_progress

@@ -8,6 +8,8 @@ import subprocess
 from contextlib import contextmanager
 from urllib.parse import urlsplit
 
+from velocicyber.providers.transport import validate_inference_url
+
 
 class ConfidentialGateway:
     def __init__(self, settings):
@@ -73,14 +75,14 @@ def needs_confidential_gateway(url):
 
 @contextmanager
 def api_connection(settings):
+    url = validate_inference_url(settings.api_url)
     gateway = None
     try:
-        if needs_confidential_gateway(settings.api_url):
+        if needs_confidential_gateway(url):
             gateway = ConfidentialGateway(settings)
-            yield gateway.start()
+            yield validate_inference_url(gateway.start())
         else:
-            # User-configured providers and local fixtures keep their own transport.
-            yield settings.api_url
+            yield url
     finally:
         if gateway:
             gateway.stop()

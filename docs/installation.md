@@ -139,6 +139,15 @@ chmod 600 .env Modules.txt
 
 Edit the copies with your own credentials and dataset IDs. Never commit them. Unset options fall back to `Modules.example.txt`; there is no maintainer dataset or selected GPU model by default. Environment variables can override API credentials.
 
+`API_BASE_URL` must use HTTPS for remote providers, including servers on your
+LAN. Plain HTTP is accepted only for loopback addresses such as `127.0.0.1`
+and `::1`; HTTP `localhost` resolves directly to `127.0.0.1` in the harness.
+Keep credentials in `.env`, not in the URL. If an existing remote HTTP endpoint
+is rejected, configure HTTPS on that server or use a local SSH tunnel.
+The default Adverserial connection, Pi models and managed Lambda SSH tunnels
+need no configuration changes. API requests do not follow redirects; use the
+provider's final HTTPS endpoint.
+
 See [Model setup](models.md) for Lambda SSH configuration and optional Pi downloads.
 
 

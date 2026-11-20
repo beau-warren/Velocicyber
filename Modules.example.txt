@@ -7,6 +7,7 @@ LOCAL_MODEL_OPTIONS=Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16,orcarouter/Or
 PI_LOCAL_MODEL=mtrpires/Qwen3.5-35B-A3B-IQK-RPi5-16GB
 PI_LOCAL_MODEL_OPTIONS=terrorswift/BugTraceAI-Apex-G4-26B-APEX-GGUF,Blackfrost-AI/LFM3-1.7B-DERISKED
 API_MODEL=lordx64/cyberkimi
+# Remote API endpoints require HTTPS. HTTP is allowed only for local loopback inference.
 API_BASE_URL=https://api.adverserial.ai/v1
 # Use your existing Lambda SSH key name and a key stored under this checkout.
 LAMBDA_SSH_KEY_NAME=

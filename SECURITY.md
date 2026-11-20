@@ -45,6 +45,11 @@ availability errors.
 - **Credential handling:** long-lived provider credentials are kept out of the
   execution engine's inherited environment. Setup saves private configuration
   with owner-only permissions; private files are excluded from Git.
+- **Inference transport:** remote API endpoints require HTTPS before credentials
+  are sent. HTTP is limited to loopback; `localhost` is pinned to `127.0.0.1`.
+  Loopback requests ignore environment proxies, redirects are not followed,
+  and credentials embedded in endpoint URLs are rejected. HTTPS certificate
+  verification and Adverserial confidential-client checks remain enabled.
 - **Scope monitoring:** the optional sentinel reviews executable actions against
   `SCOPE/SCOPE.MD` asynchronously and can interrupt the current task.
 - **Controlled updates and collection:** managed engine updates require approval

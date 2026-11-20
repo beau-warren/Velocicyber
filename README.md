@@ -66,6 +66,8 @@ and each model's **More Details** menu before choosing hardware.
 
 Velocicyber supports local, self-managed cloud, and verified confidential API
 inference, with default execution restrictions and optional scope monitoring.
+Remote API endpoints require HTTPS; local inference and SSH tunnels retain
+loopback HTTP support.
 
 Commands execute on your local machine regardless of where inference runs.
 Closed mode restricts writes and network access but does not fully isolate
