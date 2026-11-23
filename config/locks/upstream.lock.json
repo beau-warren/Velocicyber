@@ -1,8 +1,8 @@
 {
   "repository": "https://github.com/openinterpreter/openinterpreter",
-  "tag": "rust-v0.0.56",
+  "tag": "rust-v0.0.61",
   "asset": "open-interpreter-package-aarch64-unknown-linux-musl.tar.gz",
-  "sha256": "0fe21c5e925dad7fcfa8f9b5df8a3c690e7a1e50fdc15ca3d73671f8bcdca3a0",
-  "size": 234243167,
-  "url": "https://github.com/openinterpreter/openinterpreter/releases/download/rust-v0.0.56/open-interpreter-package-aarch64-unknown-linux-musl.tar.gz"
+  "sha256": "effe6105616594279727bac659dce8331d3a88ce0476acfa1dcfe2bc9fbf4331",
+  "size": 235219202,
+  "url": "https://github.com/openinterpreter/openinterpreter/releases/download/rust-v0.0.61/open-interpreter-package-aarch64-unknown-linux-musl.tar.gz"
 }

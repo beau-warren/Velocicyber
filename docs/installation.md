@@ -103,6 +103,11 @@ The first launch runs setup before opening the main menu. Every optional item ca
 9. Optional desktop launcher with the bundled neon V icon, when a Linux desktop folder is available. Enter skips it.
 10. Optional Lambda SSH setup: registered key name and private key file. Select a file from `ssh-keys` or enter a path; external keys are copied into this installation with `0600` permissions. No instance is launched.
 
+The default engine for new installations is **Open Interpreter rust-v0.0.61**
+for Linux ARM64 (about **235 MB**, checksum-verified). Updating the harness
+source does not replace an already installed engine; use `/update` to review
+and approve an engine upgrade.
+
 Credentials are saved to `.env`; dataset destinations and SSH name/path settings are saved to `Modules.txt`. Private-key contents stay in the key file. Setup writes these files with owner-only permissions (`0600`). Both files are excluded from Git. Configuration is parsed as data, never sourced as shell code.
 
 Keep `HUGGINGFACE_API` for dataset uploads. Set `HUGGINGFACE_READ_API` to a
