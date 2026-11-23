@@ -11,6 +11,12 @@
 - There are no default maintainer dataset destinations. Both datasets are optional, separately configured, and must differ. Collection and upload permissions start off.
 - Runtime and model installers use pinned source revisions or artifacts; model/engine archives are checksum-verified. Python dependencies are version-pinned, but the lock does not provide package artifact hashes.
 
+The dependency lock includes `certifi==2026.10.18` and `filelock==4.2.1`, which
+address the [emSign certificate-trust advisory](https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2)
+and [filelock security fixes](https://github.com/tox-dev/filelock/releases/tag/4.2.1).
+Existing installations receive these dependencies through a harness update;
+see [Updates and rollback](docs/installation.md#updates-and-rollback).
+
 <a name="runtime-boundaries"></a>
 
 ## ![Runtime boundaries](assets/docs/headings/h2-runtime-boundaries.svg)
