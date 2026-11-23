@@ -84,10 +84,10 @@ privacy considerations, and known limitations.
 
 | Role | Included choices |
 | --- | --- |
-| API coding | CyberKimi; CyberGLM; CyberSeek |
-| Raspberry Pi CPU coding | Qwen3.5-35B-A3B IQK; BugTrace APEX Mini; Blackfrost LFM3 1.7B Q8 |
-| Lambda GPU coding | M.O.G.-SEC 27B (64K or 1M context); OrcaCyber Nano; Flint Mix-24G; CYBER-FROST 3.8 BF16; GLM-5.3 Flash EXL3/TensorFold; SAGE-A1P5 BF16 V2; Inkling 2 Mini Derisked |
-| Local sentinel | Qwen3.5-35B-A3B IQK; Granite Guardian 4.1 8B Q4 |
+| API coding | <ul><li>CyberKimi</li><li>CyberGLM</li><li>CyberSeek</li></ul> |
+| Raspberry Pi CPU coding | <ul><li>Qwen3.5-35B-A3B IQK</li><li>BugTrace APEX Mini</li><li>Blackfrost LFM3 1.7B Q8</li></ul> |
+| Lambda GPU coding | <ul><li>M.O.G.-SEC 27B (64K or 1M context)</li><li>OrcaCyber Nano</li><li>Flint Mix-24G</li><li>CYBER-FROST 3.8 BF16</li><li>GLM-5.3 Flash EXL3/TensorFold</li><li>SAGE-A1P5 BF16 V2</li><li>Inkling 2 Mini Derisked</li></ul> |
+| Local sentinel | <ul><li>Qwen3.5-35B-A3B IQK</li><li>Granite Guardian 4.1 8B Q4</li></ul> |
 
 Repository IDs are in [Modules.example.txt](Modules.example.txt); hardware,
 context limits and validation status are in [model setup](docs/models.md) and
