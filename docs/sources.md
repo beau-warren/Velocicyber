@@ -27,7 +27,7 @@ requirements, measured results and features still awaiting validation.
 
 | Official source | Used for |
 | --- | --- |
-| [Open Interpreter](https://github.com/openinterpreter/openinterpreter), [releases](https://github.com/openinterpreter/openinterpreter/releases) | Execution engine, installed separately. The bundled default is **rust-v0.0.56**, Linux ARM64; approved engine updates can install a newer version. [Engine pin](../config/locks/upstream.lock.json). |
+| [Open Interpreter](https://github.com/openinterpreter/openinterpreter), [releases](https://github.com/openinterpreter/openinterpreter/releases) | Execution engine, installed separately. The bundled default is **rust-v0.0.61**, Linux ARM64; approved engine updates can install a newer version. [Engine pin](../config/locks/upstream.lock.json). |
 | [Adverserial confidential SDK](https://github.com/AdverserialAI/confidential-sdk) | CyberKimi/CyberGLM/CyberSeek API access. SDK commit `bdf24fda360ff`; hosted models are provider-controlled. |
 | [Lambda Cloud API](https://docs.lambda.ai/api/cloud) | GPU instances, capacity, pricing and SSH-key discovery. |
 | [Hugging Face Hub](https://huggingface.co/docs/huggingface_hub/index), [dataset uploads](https://huggingface.co/docs/huggingface_hub/guides/upload) | Model downloads and optional uploads to your main-agent/sentinel datasets. Python client **1.32.0**. |

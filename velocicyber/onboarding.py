@@ -218,7 +218,7 @@ def run_setup(root, *, force=False, input_fn=input, secret_fn=getpass.getpass, i
         engine_missing = False
     except RuntimeError:
         engine_missing = True
-    if engine_missing and confirm("Download and install the pinned execution engine (about 234 MB)?", input_fn):
+    if engine_missing and confirm("Download and install the pinned execution engine (about 235 MB)?", input_fn):
         install_component(root, "install_engine.py")
     if settings.secrets.get("ADVERSARIAL_API"):
         if confirm("Install or refresh the Adverserial confidential API client? Requires Node.js/npm and network access", input_fn):
