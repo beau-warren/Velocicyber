@@ -70,6 +70,10 @@ availability errors.
   verification and Adverserial confidential-client checks remain enabled.
 - **Scope monitoring:** the optional sentinel reviews executable actions against
   `SCOPE/SCOPE.MD` asynchronously and can interrupt the current task.
+- **Repository checks:** GitHub CI runs on disposable hosted ARM64 runners with
+  read-only repository access and a commit-pinned checkout action. Pull requests
+  receive no provider credentials; native engine and sandbox tests must pass
+  without skips. Local update validation remains a separate check.
 - **Controlled updates and collection:** managed engine updates require approval
   and are staged and compatibility-tested before activation. Collection and
   dataset uploads have user-controlled permissions and default to off in new

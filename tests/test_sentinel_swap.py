@@ -151,6 +151,12 @@ async def test_changed_provider_needs_a_new_confirmation(swap_case):
         assert "CyberKimi" in app.screen.details
         app.settings.api_model = "lordx64/cyberglm"
         await choose(pilot, 1)
+        # The replacement confirmation is deferred until the next refresh.
+        # Waiting only for idle messages can return before that refresh occurs.
+        async with asyncio.timeout(5):
+            while app.screen.id != "sentinel-swap" or not app.screen.is_mounted:
+                await pilot.pause()
+        await pilot.pause()
         assert app.screen.id == "sentinel-swap" and "CyberGLM" in app.screen.details
         assert not events and app.state.pi_ready
         await choose(pilot, 0)
