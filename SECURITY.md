@@ -136,6 +136,14 @@ Official privacy policies for the services this harness can connect to
 
 ### ![Model supply-chain and backdoor risk](assets/docs/headings/h3-model-supply-chain-and-backdoor-risk.svg)
 
+[How abliterated models can get you pwned](https://projectdiscovery.io/research/how-abliterated-models-can-get-you-pwned)
+(Prince Chaddha, ProjectDiscovery; 6 October 2026) reports a controlled demonstration:
+a modified Qwen2.5-7B-Instruct model answered ordinary prompts normally, but a
+hidden trigger caused coding-agent tool calls that downloaded and ran a payload
+to exfiltrate dummy project credentials. This illustrates the risk of maliciously
+modified weights, including redistributed abliterated builds; it does not show
+that abliteration itself implants a backdoor.
+
 [Unelicitable Backdoors in Language Models via Cryptographic Transformer Circuits](https://arxiv.org/abs/2406.02619)
 (Draguns et al.; NeurIPS 2024, revised 1 February 2025) studies deliberately
 constructed transformer backdoors whose hidden behavior can be computationally

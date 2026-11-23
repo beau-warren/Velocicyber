@@ -19,9 +19,15 @@
 > its use. You are responsible for reviewing and supervising actions performed by
 > the harness.
 >
-> **Model backdoor risk:** Open-weight models and third-party modifications can
-> contain hidden behavior. [Research on cryptographic model backdoors](https://arxiv.org/abs/2406.02619)
-> shows why testing may fail to reveal such behavior, even with access to the
+> **Model backdoor risk:** Open-weight models and third-party modifications,
+> including abliterated builds, can contain hidden behavior. ProjectDiscovery's
+> [How abliterated models can get you pwned](https://projectdiscovery.io/research/how-abliterated-models-can-get-you-pwned)
+> demonstrates a deliberately backdoored model inducing a coding agent to run a
+> credential-stealing payload in a controlled test. Abliteration alone does not
+> establish that a model is backdoored.
+>
+> [Research on cryptographic model backdoors](https://arxiv.org/abs/2406.02619)
+> shows why testing may fail to reveal hidden behavior, even with access to the
 > model's internals. Treat model outputs and tool calls as untrusted. Successful
 > downloads, checksums and ordinary coding tests do not certify a model as safe.
 
