@@ -144,14 +144,6 @@ to exfiltrate dummy project credentials. This illustrates the risk of maliciousl
 modified weights, including redistributed abliterated builds; it does not show
 that abliteration itself implants a backdoor.
 
-[Unelicitable Backdoors in Language Models via Cryptographic Transformer Circuits](https://arxiv.org/abs/2406.02619)
-(Draguns et al.; NeurIPS 2024, revised 1 February 2025) studies deliberately
-constructed transformer backdoors whose hidden behavior can be computationally
-infeasible to trigger without the secret input, under the paper's cryptographic
-assumptions, even with access to the model's internals. This limits what testing
-can establish; it does not mean every backdoor is completely undetectable or
-that any model listed in this repository is known to be compromised.
-
 Velocicyber's revision pins and checksums verify expected files, not the absence
 of malicious behavior. Running inference locally or on your own Lambda instance
 does not eliminate this risk. Keep secrets outside task workspaces, restrict

@@ -26,10 +26,8 @@
 > credential-stealing payload in a controlled test. Abliteration alone does not
 > establish that a model is backdoored.
 >
-> [Research on cryptographic model backdoors](https://arxiv.org/abs/2406.02619)
-> shows why testing may fail to reveal hidden behavior, even with access to the
-> model's internals. Treat model outputs and tool calls as untrusted. Successful
-> downloads, checksums and ordinary coding tests do not certify a model as safe.
+> Treat model outputs and tool calls as untrusted. Successful downloads,
+> checksums and ordinary coding tests do not certify a model as safe.
 
 Velocicyber is a terminal coding harness for authorized red-team, blue-team,
 and security research. It pairs one coding agent with a human operator and an
