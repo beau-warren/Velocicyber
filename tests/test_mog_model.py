@@ -343,7 +343,7 @@ async def test_mog_1m_menu_details_cancel_then_confirm_without_launch(mog):
         assert not app.state.model_ready and app.state.active_provider == "api"
         assert app.gpu._client is None and app.conversation
         await pilot.press("slash", *"gpu", "enter", *"on", "enter")
-        assert "Experimental MOG 1M" in app.screen.heading
+        assert "MOG 1M" in app.screen.heading
         assert "160 GiB" in app.screen.heading
         await pilot.press("escape")
         assert app.gpu._client is None and not app.state.instance_id

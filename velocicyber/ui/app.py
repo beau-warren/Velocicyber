@@ -857,7 +857,7 @@ class VelocicyberApp(App):
                 Menu(
                     repo + "\nChoose the context window",
                     [("64k", "64K context — lighter · 80 GB H100"),
-                     ("1m", "1M context (1 million) — experimental · 180 GB B200")],
+                     ("1m", "1M context (1 million) — 180 GB B200")],
                     id="mog-context",
                 ),
                 lambda variant: self.review_local_model(repo, mog_context=variant)

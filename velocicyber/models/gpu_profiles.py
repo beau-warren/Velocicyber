@@ -220,7 +220,7 @@ MOG_CONTEXT_PROFILES = {
         ),
         response_timeout_seconds=3600,
         notice=(
-            "Experimental MOG 1M context (1,000,000 tokens).\n"
+            "MOG 1M context (1,000,000 tokens).\n"
             "Same 55.6 GB BF16 weights; FP8 KV cache and float32 recurrent state.\n"
             "Recommended first test: Single 180 GB (B200). More headroom: 2× B200 (360 GB).\n"
             "Planning floor: 160 GiB VRAM; Single 80 GB is unsupported.\n"

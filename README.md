@@ -86,7 +86,7 @@ privacy considerations, and known limitations.
 | --- | --- |
 | API coding | CyberKimi; CyberGLM; CyberSeek |
 | Raspberry Pi CPU coding | Qwen3.5-35B-A3B IQK; BugTrace APEX Mini; Blackfrost LFM3 1.7B Q8 |
-| Lambda GPU coding | M.O.G.-SEC 27B (64K or experimental 1M context); OrcaCyber Nano; Flint Mix-24G; CYBER-FROST 3.8 BF16; GLM-5.3 Flash EXL3/TensorFold; SAGE-A1P5 BF16 V2; Inkling 2 Mini Derisked |
+| Lambda GPU coding | M.O.G.-SEC 27B (64K or 1M context); OrcaCyber Nano; Flint Mix-24G; CYBER-FROST 3.8 BF16; GLM-5.3 Flash EXL3/TensorFold; SAGE-A1P5 BF16 V2; Inkling 2 Mini Derisked |
 | Local sentinel | Qwen3.5-35B-A3B IQK; Granite Guardian 4.1 8B Q4 |
 
 Repository IDs are in [Modules.example.txt](Modules.example.txt); hardware,

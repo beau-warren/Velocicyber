@@ -63,7 +63,7 @@ and one request at a time.
 | Model | Lambda capacity choice | Profile VRAM floor | Host RAM minimum | Disk minimum | Serving backend |
 | --- | --- | --- | --- | --- | --- |
 | [M.O.G.-SEC 27B — 64K](#mog-sec-27b-bf16) | Single 80 GB H100; 180 GB B200 also supported | 72 GiB | 128 GiB | 256 GiB | vLLM |
-| [M.O.G.-SEC 27B — 1M, experimental](#mog-sec-27b-bf16) | Single 180 GB B200; 2× B200 for more headroom | 160 GiB | 256 GiB | 256 GiB | vLLM |
+| [M.O.G.-SEC 27B — 1M](#mog-sec-27b-bf16) | Single 180 GB B200; 2× B200 for more headroom | 160 GiB | 256 GiB | 256 GiB | vLLM |
 | [OrcaCyber Nano](#orcacyber-nano-mix-157g) | Single 24 GB A10; 48 GB A6000 recommended for headroom | 24 GiB | 32 GiB | 64 GiB | llama.cpp |
 | [Flint Mix-24G](#flint-mix-24g) | Single 40 GB A100 minimum menu choice; 48 GB A6000 recommended | 32 GiB | 64 GiB | 96 GiB | llama.cpp |
 | [CYBER-FROST 3.8 BF16](#cyber-frost-38-bf16) | Cluster 720 GB, 4× B200 recommended for first test | 480 GiB | 512 GiB | 512 GiB | vLLM |
@@ -103,7 +103,7 @@ context window before **Confirm selected model choice** or **More Details**:
 
 - **64K (65,536 tokens):** lighter profile; start with **Single 80 GB H100**.
   Uses BF16 KV cache and float32 recurrent state, with a 72 GiB VRAM planning floor.
-- **1 million (1,000,000 tokens), experimental:** first-test recommendation is
+- **1 million (1,000,000 tokens):** first-test recommendation is
   **Single 180 GB B200**; **2× B200 (360 GB)** provides more headroom. Uses FP8
   KV cache, float32 recurrent state, chunked prefill and prefix caching. The
   planning floor is 160 GiB VRAM; a single 80 GB instance is rejected.
