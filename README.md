@@ -77,6 +77,8 @@ The sentinel is reactive and cannot guarantee prevention of harmful actions.
 
 See [Security boundaries](SECURITY.md#runtime-boundaries) for current protections,
 privacy considerations, and known limitations.
+Report security issues through [private vulnerability reporting](https://github.com/beau-warren/Velocicyber/security/advisories/new);
+see the [reporting instructions](SECURITY.md#reporting-and-release-status).
 
 <a name="current-model-options"></a>
 

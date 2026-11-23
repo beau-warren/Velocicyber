@@ -164,7 +164,15 @@ reactive sentinel is not a guarantee that a backdoor will be detected or stopped
 
 ## ![Reporting and release status](assets/docs/headings/h2-reporting-and-release-status.svg)
 
-Report suspected issues privately to the repository owner; do not put credentials
-or private task logs in an issue. Automated checks do not establish the absence of
-vulnerabilities. See [model setup](docs/models.md)
-for the validation limits of each serving profile.
+Report suspected security vulnerabilities through
+[GitHub's private reporting form](https://github.com/beau-warren/Velocicyber/security/advisories/new)
+(sign-in required). Do not post vulnerability details in public issues or pull
+requests; coordinate disclosure with the maintainers in the private report.
+
+Include the harness version or commit, operating system, relevant engine/model,
+minimal reproduction steps, and expected versus actual behavior and impact.
+Use sanitized examples; omit credentials, private scope documents, customer data
+and raw task logs, including from private reports.
+
+Automated checks do not establish the absence of vulnerabilities. See
+[model setup](docs/models.md) for the validation limits of each serving profile.
