@@ -7,7 +7,8 @@
 ## ![First session](../assets/docs/headings/h2-first-session.svg)
 
 - `/api`: select CyberKimi, CyberGLM or CyberSeek.
-- `/local`: select a model, then confirm it or view its hardware/download details.
+- `/local & cloud models` (shortcut `/local`): select a Pi CPU or Lambda GPU model,
+  then confirm it or view its hardware/download details.
   MOG first offers **64K** or **1 million** context; each has its own GPU requirements.
   An uninstalled Pi model asks for download approval; No or Esc cancels without
   changing your current model or session.

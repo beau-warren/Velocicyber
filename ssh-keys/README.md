@@ -26,6 +26,6 @@ The private-key path must resolve inside this installation. `LAMBDA_SSH_KEY_NAME
 is the name registered with Lambda, not the local filename. Leave `LAMBDA_REGION`
 blank to choose a compatible region with capacity, or set a preferred region.
 
-Private keys are ignored by Git. Use `/local` to select a GPU model, then `/gpu`
+Private keys are ignored by Git. Use `/local & cloud models` to select a GPU model, then `/gpu`
 to review an instance and approve launch. See [Lambda model setup](../docs/models.md#lambda-gpu-setup)
 for inference-tunnel and host-key behavior.

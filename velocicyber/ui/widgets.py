@@ -8,6 +8,8 @@ from textual.screen import ModalScreen
 from textual.widgets import Input, Label, OptionList, Static
 from textual.widgets.option_list import Option
 
+from velocicyber.ui.commands import command_name
+
 
 class Prompt(Input):
     BINDINGS = [
@@ -32,7 +34,8 @@ class Prompt(Input):
         option = self.app.query_one("#commands", OptionList).highlighted_option
         if option and option.id:
             self.value = (
-                self.value[0] + option.id + (" " if option.id in {"task", "verifier"} else "")
+                self.value[0] + command_name(option.id)
+                + (" " if option.id in {"task", "verifier"} else "")
             )
             self.cursor_position = len(self.value)
 

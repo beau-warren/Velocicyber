@@ -112,7 +112,7 @@ class SentinelRuntime:
             if cfg is None:
                 if self.state.sentinel_model == "qwen":
                     raise RuntimeError("The existing Qwen Pi installation did not validate. "
-                                       "Install or repair it via /local before using it as Sentinel.")
+                                       "Install or repair it via /local & cloud models before using it as Sentinel.")
                 self.state.sentinel_stage = "DOWNLOADING"
                 self.install_process = await asyncio.create_subprocess_exec(
                     sys.executable, str(self.settings.root / "scripts/install/install_sentinel.py"),

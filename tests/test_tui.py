@@ -846,6 +846,20 @@ async def test_command_filter_navigation_escape_and_arguments(settings, monkeypa
         await pilot.press("backslash", "down", "enter")
         assert app.screen.id == "local-models"
         await pilot.press("escape")
+        for query in ("\\cloud", "/local & cloud models", "/local"):
+            prompt.value = query
+            await pilot.pause()
+            assert commands.option_count == 1
+            assert str(commands.highlighted_option.prompt).startswith(
+                query[0] + "local & cloud models"
+            )
+            await pilot.press("tab")
+            assert prompt.value == query[0] + "local & cloud models"
+            await pilot.press("escape", "enter")  # Direct submission without the palette.
+            assert app.screen.id == "local-models"
+            assert app.screen.heading.startswith("Local & Cloud Models")
+            await pilot.press("escape")
+        assert not calls and app.gpu._client is None
         await pilot.press("slash", "a", "p", "tab")
         assert prompt.value == "/api"
         await pilot.press("escape")

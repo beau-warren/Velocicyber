@@ -4,7 +4,7 @@
 
 The tables below describe the profiles registered in this release. A menu entry
 is not a claim that every model or hardware combination has passed live testing.
-Choose `/local` → **More Details** for the matching in-app requirements.
+Choose `/local & cloud models` → **More Details** for the matching in-app requirements.
 
 <a name="api-coding-models"></a>
 
@@ -44,7 +44,7 @@ first. See [SSH setup](../ssh-keys/README.md) for details and manual configurati
 Leave `LAMBDA_REGION` blank in `Modules.txt` to select according to availability,
 or set your preferred region.
 
-Review requirements and startup estimates under `/local` → **More Details**,
+Review requirements and startup estimates under `/local & cloud models` → **More Details**,
 then choose compatible capacity through `/gpu`. Launch confirmation
 shows current Lambda pricing and availability and requires consent. Selecting a
 model alone does not launch an instance or download its weights to the Pi.
@@ -96,7 +96,7 @@ The inference container is published on the GPU host's loopback address and acce
 ### ![M.O.G.-SEC 27B BF16](../assets/docs/headings/h3-mog-sec-27b-bf16.svg)
 
 [Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16](https://huggingface.co/Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16)
-uses about **55.6 GB of BF16 weights**. In `/local`, choose MOG, then choose a
+uses about **55.6 GB of BF16 weights**. In `/local & cloud models`, choose MOG, then choose a
 context window before **Confirm selected model choice** or **More Details**:
 
 - **64K (65,536 tokens):** lighter profile; start with **Single 80 GB H100**.
@@ -110,7 +110,7 @@ Both profiles permit compatible H100/H200/B200/B300 hardware with 1, 2, 4 or 8
 GPUs, subject to their capacity, host RAM and disk requirements. They reuse the
 same checkpoint and cached weight files; changing context restarts inference.
 The server must report the selected context before the harness marks it ready.
-A running older 32K server needs reloading through `/local`.
+A running older 32K server needs reloading through `/local & cloud models`.
 
 The window covers input, reasoning, tool results and output. Automatic compaction
 starts at 75%: **49,152 tokens for 64K**, **750,000 for 1M**. The 1M profile allows
@@ -126,7 +126,7 @@ The publisher's SGLang deployment is separate from this harness's pinned vLLM
 profile. A small successful readiness probe does not establish 1M quality.
 
 Optional `MOG_CONTEXT_PROFILE=64k` or `1m` in `Modules.txt` sets the profile for
-programmatic selection; the `/local` choice takes effect for the current harness
+programmatic selection; the `/local & cloud models` choice takes effect for the current harness
 run. No model uploads automatically at startup. This explicit profile takes
 precedence over a legacy MOG entry in `LOCAL_MODEL_CONTEXT_WINDOWS`.
 
@@ -208,7 +208,7 @@ is not enabled. **Live Lambda validation remains pending.**
 ### ![SAGE A1P5 BF16 V2](../assets/docs/headings/h3-sage-a1p5-bf16-v2.svg)
 
 [Blackfrost-AI/SAGE-A1P5-DERISKED-BF16-V2](https://huggingface.co/Blackfrost-AI/SAGE-A1P5-DERISKED-BF16-V2)
-is available through `/local` → **More Details** / **Confirm selected model choice**.
+is available through `/local & cloud models` → **More Details** / **Confirm selected model choice**.
 
 - **Recommended Lambda choice: Single 180 GB (B200).** The conservative profile
   floor is 96 GiB total GPU VRAM, with 128 GiB host RAM and 256 GiB disk. The 80 GB
@@ -298,7 +298,7 @@ an API or Lambda model for coding; the two Pi roles cannot run concurrently.
 
 | Sentinel | Weight source | Weight size | Available RAM needed | Installation |
 | --- | --- | --- | --- | --- |
-| Qwen3.5-35B-A3B IQK | Same Qwen repository listed above | 12.23 GB, shared with the Pi coding profile | 13 GiB | Reuses a verified Qwen installation; install or repair it through `/local` or the Pi installer first |
+| Qwen3.5-35B-A3B IQK | Same Qwen repository listed above | 12.23 GB, shared with the Pi coding profile | 13 GiB | Reuses a verified Qwen installation; install or repair it through `/local & cloud models` or the Pi installer first |
 | Granite Guardian 4.1 8B Q4 | [ibm-granite/granite-guardian-4.1-8b-GGUF](https://huggingface.co/ibm-granite/granite-guardian-4.1-8b-GGUF) | 5.12 GB | 7 GiB | Downloads the pinned `granite-guardian-4.1-8b-Q4_K_M.gguf` and runtime on first enable if needed; reuses validated files afterward |
 
 Granite's logical model ID is `ibm-granite/granite-guardian-4.1-8b`; its deployed

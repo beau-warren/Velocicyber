@@ -2,7 +2,7 @@
 
 CONTROLS = [
     ("gpu", "GPU / GPU Cluster"),
-    ("local", "Local Model Selection"),
+    ("local", "Pi CPU or Lambda GPU"),
     ("api", "API Model"),
     ("sentinel", "Scope observer — ON / OFF"),
     ("data-collection", "Data Collection — Fine-tuning Data"),
@@ -22,3 +22,8 @@ COMMANDS = CONTROLS + [
     ("home", "Return to the main menu"),
     ("quit", "End session and terminate its GPU"),
 ]
+
+
+def command_name(name):
+    """User-facing command name; keep internal routing IDs and shortcuts stable."""
+    return "local & cloud models" if name == "local" else name

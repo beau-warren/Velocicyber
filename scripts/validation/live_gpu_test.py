@@ -23,7 +23,7 @@ from velocicyber.state import State
 async def main(args):
     settings = Settings.load(Path(__file__).resolve().parents[2])
     if args.model not in settings.gpu_model_choices:
-        raise ValueError("Choose a configured GPU model repository from /local.")
+        raise ValueError("Choose a configured GPU model repository from /local & cloud models.")
     settings.local_model = args.model
     if args.region:
         settings.options["LAMBDA_REGION"] = args.region

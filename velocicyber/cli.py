@@ -107,7 +107,7 @@ def main():
         if args.command in (None, "run"):
             lease.enter_context(engine_lease(settings.runtime))
         if args.command == "doctor":
-            print("Selected GPU model:", settings.local_model or "none — choose in /local")
+            print("Selected GPU model:", settings.local_model or "none — choose in /local & cloud models")
             print("GPU model choices:", ", ".join(settings.gpu_model_choices) or "MISSING")
             print("Raspberry Pi CPU model:", settings.pi_model or "not configured")
             print("Main LLM dataset:", settings.dataset_repo or "MISSING")

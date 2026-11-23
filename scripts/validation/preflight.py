@@ -15,7 +15,7 @@ parser.add_argument("--model", required=True, help="GPU model repository to insp
 args = parser.parse_args()
 settings = Settings.load(root)
 if args.model not in settings.gpu_model_choices:
-    parser.error("Choose a configured GPU model repository from /local.")
+    parser.error("Choose a configured GPU model repository from /local & cloud models.")
 settings.local_model = args.model
 key = (root / settings.options["SSH_PRIVATE_KEY"]).resolve()
 if not key.is_relative_to(root):

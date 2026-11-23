@@ -122,7 +122,7 @@ local `.env`; only the verified download token is sent to approved Lambda instan
 Other settings go in `Modules.txt`.
 Collection and uploads start **OFF**. No GPU model is selected automatically, and
 Pi model weights download only after explicit setup consent or a download confirmation
-when selecting an uninstalled Pi model in `/local`.
+when selecting an uninstalled Pi model in `/local & cloud models`.
 Setup also offers Lambda SSH key-name and private-key selection/import; see [SSH setup](ssh-keys/README.md).
 On Linux desktops, setup also offers an optional [desktop launcher and neon V icon](docs/installation.md#desktop-shortcut); press Enter to skip.
 
@@ -146,10 +146,11 @@ Revisit skipped setup with `/setup` (or `./velocicyber.sh setup` in a terminal).
 Type `/` and a command name to filter the menu. Submenus use the same filtering
 style. Activating a model from the home screen starts a new conversation; use
 `/resume` to reopen saved history. The dashboard identifies the active model.
+`/local` remains a shortcut for `/local & cloud models`.
 
 | Command | Purpose |
 | --- | --- |
-| `/api`, `/local` | Choose a coding model; local selections offer confirmation and details |
+| `/api`, `/local & cloud models` | Choose an API, Pi CPU, or Lambda GPU coding model |
 | `/gpu`, `/terminate` | Manage a Lambda instance and review launch pricing |
 | `/new`, `/resume`, `/home` | Start, resume, or return to the main menu |
 | `/queue` | Inspect, pause, resume, or clear queued prompts |

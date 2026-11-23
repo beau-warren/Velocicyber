@@ -184,7 +184,7 @@ class GPUManager:
     def inspect_model(self, repo=None, *, profile_variant=None):
         repo = repo or self.settings.local_model
         if not repo:
-            raise ValueError("Choose a GPU model in /local before loading or uploading it.")
+            raise ValueError("Choose a GPU model in /local & cloud models before loading or uploading it.")
         if repo in PI_PROFILES:
             raise ValueError("This Raspberry Pi model uses the local CPU runtime, not Lambda GPUs.")
         profile = (
@@ -338,7 +338,7 @@ class GPUManager:
 
     def plan(self, memory):
         if not self.settings.local_model:
-            raise ValueError("Choose a GPU model in /local before launching GPUs.")
+            raise ValueError("Choose a GPU model in /local & cloud models before launching GPUs.")
         self.settings.download_policy()
         self.settings.local_context_window()
         if memory not in MEMORY_CHOICES:
@@ -584,7 +584,7 @@ class GPUManager:
 
     async def deploy(self):
         if not self.settings.local_model:
-            raise ValueError("Choose a GPU model in /local before loading or uploading it.")
+            raise ValueError("Choose a GPU model in /local & cloud models before loading or uploading it.")
         if self.state.gpu_status != GPUStatus.RUNNING:
             raise RuntimeError("Wait for the GPU instance to be active before loading the model.")
         download_policy = self.settings.download_policy()
@@ -804,7 +804,7 @@ class GPUManager:
                         self.state.model_context_model = ""
                         raise RuntimeError(
                             f"MOG server context is {served_window or 'unknown'}; selected profile "
-                            f"requires {configured_window} tokens. Select MOG in /local to reload "
+                            f"requires {configured_window} tokens. Select MOG in /local & cloud models to reload "
                             "the chosen context profile on compatible GPUs."
                         )
                     self.state.model_context_window = served_window or configured_window

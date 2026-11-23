@@ -18,7 +18,7 @@ checksums are in [config/locks/](../config/locks/); Python dependencies are in
 
 Publisher-advertised context limits may exceed the settings enabled in this
 harness. A model card or menu entry does not establish live compatibility;
-[model setup](models.md) and `/local` → **More Details** distinguish configured
+[model setup](models.md) and `/local & cloud models` → **More Details** distinguish configured
 requirements, measured results and features still awaiting validation.
 
 <a name="engine-providers-and-application-libraries"></a>

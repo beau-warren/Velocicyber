@@ -31,7 +31,7 @@ from velocicyber.sentinel.profiles import SENTINEL_MODELS, local_sentinel_active
 from velocicyber.sentinel.runtime import SentinelRuntime
 from velocicyber.sentinel.scope import read_scope
 from velocicyber.state import GPUStatus, State
-from velocicyber.ui.commands import COMMANDS, CONTROLS
+from velocicyber.ui.commands import COMMANDS, CONTROLS, command_name
 from velocicyber.ui.dashboard import dashboard_text
 from velocicyber.ui.presentation import (
     CODE_GRAY,
@@ -381,7 +381,7 @@ class VelocicyberApp(App):
             if status.startswith("Downloaded") and not self.pi_install_notified:
                 self.pi_install_notified = True
                 self.say(
-                    "Raspberry Pi model installation complete. Select it in Local Model Selection to load it."
+                    "Raspberry Pi model installation complete. Select it in Local & Cloud Models to load it."
                 )
             if not self.pi_busy and not self.state.pi_ready:
                 self.state.pi_stage = status
@@ -812,7 +812,7 @@ class VelocicyberApp(App):
             status = (
                 "Wait for GPU startup/shutdown, or refresh its status before selecting a model."
             )
-        return "Local Model Selection\n" + status
+        return "Local & Cloud Models\n" + status
 
     def can_select_local_model(self):
         return not (self.gpu_busy or self.restoring_gpu) and (
@@ -1032,9 +1032,9 @@ class VelocicyberApp(App):
             return
         words = query.split()
         matches = [
-            Option(f"{value[0]}{name:<16} {label}", id=name)
+            Option(f"{value[0]}{command_name(name):<22} {label}", id=name)
             for name, label in COMMANDS
-            if all(word in f"{name} {label}".lower() for word in words)
+            if all(word in f"{command_name(name)} {label}".lower() for word in words)
         ]
         menu.clear_options()
         menu.add_options(matches or [Option("No matching commands", disabled=True)])
@@ -1361,7 +1361,7 @@ class VelocicyberApp(App):
             self.say("A GPU or Sentinel operation is in progress.")
             return
         if value in ("on", "load", "connect") and not self.settings.local_model:
-            self.say("Choose and confirm a GPU model in /local first.")
+            self.say("Choose and confirm a GPU model in /local & cloud models first.")
             self.menu_selected("local")
             return
         if value == "load" and self.gpu_model_ready(self.settings.local_model):
@@ -1442,7 +1442,7 @@ class VelocicyberApp(App):
         if memory is None:
             return
         if not self.settings.local_model:
-            self.say("Choose and confirm a GPU model in /local first.")
+            self.say("Choose and confirm a GPU model in /local & cloud models first.")
             return
         if self.demo:
             self.state.gpu_status = GPUStatus.INITIALIZED
@@ -1640,6 +1640,7 @@ class VelocicyberApp(App):
             self.say(
                 "Type \\ or / to filter commands · /new new conversation · "
                 "/resume saved conversations · /chat conversation · /home main menu · "
+                "/local & cloud models Pi CPU/Lambda GPU selection · "
                 "/sandbox filesystem access · "
                 "/sentinel scope observer ON/OFF · "
                 "/data-collection collection, manual upload and Advanced task/verification settings · "

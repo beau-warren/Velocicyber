@@ -241,7 +241,7 @@ class PiModelManager:
             if cfg is None:
                 if not allow_download:
                     raise RuntimeError(
-                        "Pi model download needs confirmation. Select it in /local to approve."
+                        "Pi model download needs confirmation. Select it in /local & cloud models to approve."
                     )
                 await self.install(notify)
                 cfg = self.installed()
@@ -296,7 +296,7 @@ class PiModelManager:
                 + (
                     " Inference now runs on this Pi."
                     if self.state.active_provider == "pi"
-                    else " Select it under Local Model Selection to switch from the API."
+                    else " Select it under Local & Cloud Models to switch from the API."
                 )
             )
         except BaseException:

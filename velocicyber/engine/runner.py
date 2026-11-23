@@ -377,7 +377,7 @@ class Engine:
         elif selected == "pi":
             if not self.state.pi_ready:
                 raise RuntimeError(
-                    "The Raspberry Pi model is not ready. Select it in Local Model Selection to load it."
+                    "The Raspberry Pi model is not ready. Select it in Local & Cloud Models to load it."
                 )
             url, key, model = self.state.pi_url, "pi-loopback", self.settings.pi_model
         else:

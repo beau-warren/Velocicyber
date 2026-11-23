@@ -310,7 +310,7 @@ async def test_mog_readiness_requires_actual_selected_context(mog, monkeypatch, 
         assert mog.state.model_context_window == reported
         mog.check_tools.assert_awaited_once()
     else:
-        with pytest.raises(RuntimeError, match="Select MOG in /local to reload"):
+        with pytest.raises(RuntimeError, match="Select MOG in /local & cloud models to reload"):
             await mog.check_ready()
         assert not mog.state.model_ready
         assert mog.state.model_context_window == 0
