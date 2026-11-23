@@ -1,0 +1,68 @@
+name: Velocicyber CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-arm64:
+    name: Linux ARM64 tests
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+    steps:
+      - name: Check out candidate source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Prepare isolated Linux test runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes python3-venv bubblewrap
+          # This disposable CI VM must allow the namespaces used by sandbox tests.
+          if [ -e /proc/sys/kernel/apparmor_restrict_unprivileged_userns ]; then
+            sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          fi
+          # Use the distribution Python so its standard library is visible inside Bubblewrap.
+          /usr/bin/python3 -m venv .venv
+          .venv/bin/python -m pip install -r requirements.lock
+          .venv/bin/python -m pip install --no-deps --no-build-isolation -e .
+          .venv/bin/python -m pip check
+
+      - name: Check Python source
+        run: .venv/bin/python -m ruff check --no-cache .
+
+      - name: Install and verify the pinned ARM64 engine
+        run: |
+          .venv/bin/python scripts/install/install_engine.py
+          .venv/bin/python -c "from velocicyber.engine.isolation import check_isolation; check_isolation()"
+          test -x .runtime/engine/bin/interpreter
+          echo "VELOCICYBER_TEST_ENGINE=$GITHUB_WORKSPACE/.runtime/engine/bin/interpreter" >> "$GITHUB_ENV"
+
+      - name: Run offline fixtures and real engine integration
+        timeout-minutes: 12
+        run: |
+          .venv/bin/python -m pytest -p pytest_asyncio.plugin -q --junitxml=.runtime/ci-tests.xml
+          .venv/bin/python - <<'PY'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          cases = ET.parse(Path(".runtime/ci-tests.xml")).findall(".//testcase")
+          if not cases or any(case.find(kind) is not None for case in cases
+                              for kind in ("failure", "error", "skipped")):
+              raise SystemExit("CI requires a nonempty test suite with no failures, errors or skips.")
+          print(f"Passed {len(cases)} tests, including native engine and sandbox integration.")
+          PY

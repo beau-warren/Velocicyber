@@ -202,6 +202,11 @@ version, errors, and the engine's published security advisories. A failed check
 never means that component is up to date. No periodic checks or automatic installs
 run while you work.
 
+Repository CI runs lint, dependency checks and the full test suite on a disposable
+Linux ARM64 runner for pull requests and `main`. It uses the pinned engine and
+synthetic model responses; no provider credentials, GPUs or model weights are
+required. The local updater still validates each candidate before activation.
+
 Open `/update` and choose **Update**. The menu selects the harness, engine, or
 both according to the check result, shows the targets and asks for confirmation.
 Proceeding closes the session, stops Pi inference and terminates its managed GPU.
