@@ -82,7 +82,10 @@ def download_safetensors(cfg, folder, docker, mounts):
     )
     missing = 0
     for file in files:
-        if Path(file["filename"]).name != file["filename"] or file["size"] < 0:
+        if ((Path(file["filename"]).name != file["filename"] and not (
+                cfg.get("repo") == "Blackfrost-AI/Inkling-2-Mini-Derisked"
+                and file["filename"] == "tiktoken/tokenizer.model"
+        )) or file["size"] < 0):
             raise ValueError("Invalid model file manifest.")
         cached = snapshot / file["filename"]
         if not cached.is_file() or cached.stat().st_size != file["size"]:
@@ -261,6 +264,12 @@ def check_runtime(cfg, docker):
         "assert torch.cuda.is_available(), 'CUDA unavailable'; "
         "assert (torch.ones(1, device='cuda') + 1).item() == 2"
     )
+    if cfg.get("vllm_cli"):
+        program += (
+            "; import vllm.tool_parsers.inkling_tool_parser"
+            "; import vllm.reasoning.inkling_reasoning_parser"
+            "; assert torch.cuda.get_device_capability()[0] >= 9, 'Inkling requires Hopper/Blackwell'"
+        )
     progress("runtime_check")
     try:
         result = subprocess.run(
@@ -368,6 +377,9 @@ def serve(cfg, *, tensorfold_prepare=None, tensorfold_options=None):
                 "--tool-call-parser",
                 cfg["tool_parser"],
             ]
+            if cfg.get("vllm_cli"):
+                arguments[:2] = ["serve", cfg["repo"]]
+                arguments += ["--host", "0.0.0.0", "--port", "8000"]
             if cfg["reasoning_parser"]:
                 arguments += ["--reasoning-parser", cfg["reasoning_parser"]]
             arguments += list(cfg.get("extra_arguments", ()))
@@ -392,6 +404,8 @@ def serve(cfg, *, tensorfold_prepare=None, tensorfold_options=None):
                 ]
             if backend == "tensorfold":
                 mounts, arguments = tensorfold_options(cfg, folder)
+            elif cfg.get("vllm_cli"):
+                mounts += ["--entrypoint", "vllm"]
         # Resolve the image before replacing a working server.
         progress("server_starting")
         if not image_pulled:

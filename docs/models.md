@@ -57,7 +57,7 @@ Capacity choices use the menu's GB labels; profile floors, host RAM and disk
 requirements below are in GiB. Floors are configured planning allowances, not
 measured universal minimums. GPU architecture and count must also match the
 profile: total VRAM alone does not establish compatibility. Profiles use **32K context**,
-except Flint at **64K** and MOG at **64K or 1M**, with text/coding tools
+except Flint and Inkling at **64K** and MOG at **64K or 1M**, with text/coding tools
 and one request at a time.
 
 | Model | Lambda capacity choice | Profile VRAM floor | Host RAM minimum | Disk minimum | Serving backend |
@@ -68,6 +68,7 @@ and one request at a time.
 | [Flint Mix-24G](#flint-mix-24g) | Single 40 GB A100 minimum menu choice; 48 GB A6000 recommended | 32 GiB | 64 GiB | 96 GiB | llama.cpp |
 | [CYBER-FROST 3.8 BF16](#cyber-frost-38-bf16) | Cluster 720 GB, 4× B200 recommended for first test | 480 GiB | 512 GiB | 512 GiB | vLLM |
 | [GLM-5.3 Flash TensorFold](#glm-53-flash-exl3tensorfold) | Cluster 360 GB, 2× B200; experimental | 256 GiB | 256 GiB | 512 GiB | TensorFold |
+| [Inkling 2 Mini Derisked](#inkling-2-mini-derisked) | Single 80 GB H100 recommended; 180 GB B200 also supported | 32 GiB; Hopper/Blackwell required | 64 GiB | 128 GiB | Dedicated vLLM Inkling build |
 | [SAGE A1P5 BF16 V2](#sage-a1p5-bf16-v2) | Single 180 GB B200 recommended | 96 GiB | 128 GiB | 256 GiB | vLLM |
 
 Fresh startup includes GPU boot, model download/checksums, serving-image setup,
@@ -84,6 +85,7 @@ image downloads or compilation can exceed these ranges.
 | Flint Mix-24G | 35–70 min | 3–6 min | Projected; unmeasured on Lambda |
 | CYBER-FROST 3.8 BF16 | 6–14 hours | 10–30 min | Projected; unmeasured on Lambda |
 | GLM-5.3 Flash TensorFold | 25–60 min | 5–15 min | Projected; unmeasured on Lambda |
+| Inkling 2 Mini Derisked | 10–25 min | 3–8 min | Projected from earlier M.O.G. transfer; unmeasured on Lambda |
 | SAGE A1P5 BF16 V2 | 15–30 min | 3–8 min | Projected; unmeasured on Lambda |
 
 These are the harness's current estimates, not timing guarantees. The differences
@@ -228,6 +230,39 @@ is available through `/local & cloud models` → **More Details** / **Confirm se
   and tool use remain unvalidated**. A text and parsed-tool readiness probe must
   pass before the harness enables inference. Launch confirmation shows current
   pricing and requires consent.
+
+<a name="inkling-2-mini-derisked"></a>
+
+### ![Inkling 2 Mini Derisked](../assets/docs/headings/h3-inkling-2-mini-derisked.svg)
+
+[Blackfrost-AI/Inkling-2-Mini-Derisked](https://huggingface.co/Blackfrost-AI/Inkling-2-Mini-Derisked)
+is a Lambda option under `/local & cloud models`.
+
+- **Recommended minimum menu choice: Single 80 GB H100.** Single 180 GB B200 also
+  fits the profile; no cluster is needed. The planning floor is **32 GiB VRAM**,
+  **64 GiB host RAM**, and **128 GiB disk**. A10, A6000 and A100 are not enabled:
+  the native mixed NVFP4/MXFP8 runtime needs a supported GPU architecture, not
+  just sufficient memory. These are projected requirements, not measured minima.
+- **20.16 GB / 18.78 GiB of weights**, including the unchanged MTP draft module.
+  The remote download also includes quantization metadata and the nested tokenizer.
+  Allow space for the **~10 GB compressed serving image**, extraction and caches.
+  This is not a Raspberry Pi CPU model; weights stay on the Lambda instance.
+- **64K context**, one text/coding request at a time, native `inkling` tool and
+  reasoning parsers, and DSpark with seven draft tokens. The dedicated CUDA 13
+  image is pinned by digest; use a compatible NVIDIA driver (R580+ recommended).
+  Runtime checks precede weight downloads; the harness does not update host drivers.
+  Vision and longer context are not enabled in this initial profile.
+- **Projected transfer: 2–6 minutes** on a fast GPU-host connection;
+  **10–25 minutes fresh startup**, **3–8 minutes cached**. Image downloads, CUDA
+  graph capture, slow networks and capacity waits can add time.
+- **Live Lambda inference/tool use is unvalidated.** Readiness requires text,
+  a parsed tool call and a simulated tool-result follow-up; no tool is executed
+  by these probes. Launch still requires approval and shows current pricing.
+
+Sources: [publisher deployment kit](https://huggingface.co/Blackfrost-AI/Inkling-2-Mini-Derisked/tree/main/deployment-kit),
+[upstream hardware guidance](https://huggingface.co/thinkingmachines/Inkling-2-Mini#required-hardware),
+and [vLLM runtime support](https://vllm.ai/blog/2026-11-20-inkling2-mini).
+Review the publisher's model terms before use.
 
 <a name="configuring-the-gpu-model-menu"></a>
 

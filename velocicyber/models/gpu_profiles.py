@@ -3,6 +3,8 @@
 import re
 from dataclasses import dataclass
 
+INKLING_REPO = "Blackfrost-AI/Inkling-2-Mini-Derisked"
+
 CYBER_FROST_REPO = "Blackfrost-AI/CYBER-FROST-3.8-BF16"
 MOG_SEC_REPO = "Blackfrost-Research/M.O.G.-SEC-27B-1M-CTX-BF16"
 GLM53_EXL3_REPO = "Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold"
@@ -43,6 +45,32 @@ class ServingProfile:
 
 
 GPU_PROFILES = {
+    INKLING_REPO: ServingProfile(
+        family="inkling2_loop",
+        context_window=65536,
+        minimum_vram_gib=32,
+        minimum_host_memory_gib=64,
+        minimum_disk_gib=128,
+        gpu_families=("H100", "H200", "B200", "B300"),
+        gpu_counts=(1,),
+        arguments=(
+            "--dtype", "bfloat16",
+            "--language-model-only",
+            "--enable-chunked-prefill",
+            "--max-num-batched-tokens", "2048",
+            "--speculative-config",
+            '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"probabilistic"}',
+        ),
+        notice=(
+            "Lambda GPU required · native NVFP4/MXFP8 weights + MTP: 20.16 GB / 18.78 GiB.\n"
+            "Recommended / smallest supported menu choice: Single 80 GB (H100).\n"
+            "Single 180 GB (B200) is also supported; no cluster required.\n"
+            "Planning floor: 32 GiB VRAM, but A10/A6000/A100 are not enabled for this runtime.\n"
+            "Harness context: 64K, text/coding, one request; DSpark draft module preserved.\n"
+            "Dedicated CUDA 13 vLLM image; compatible NVIDIA driver required (R580+ recommended).\n"
+            "Projected requirements; Lambda inference/tool use awaiting live validation."
+        ),
+    ),
     FLINT_REPO: ServingProfile(
         family="flint",
         context_window=65536,

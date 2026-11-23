@@ -13,6 +13,7 @@ from velocicyber.models.gpu_profiles import (
     CYBER_FROST_REPO,
     FLINT_REPO,
     GLM53_EXL3_REPO,
+    INKLING_REPO,
     MOG_SEC_REPO,
     ORCACYBER_REPO,
     SAGE_REPO,
@@ -33,6 +34,7 @@ class StartupEstimate:
 
 
 ESTIMATES = {
+    INKLING_REPO: StartupEstimate("10–25 min", "3–8 min", projected=True),
     FLINT_REPO: StartupEstimate("35–70 min", "3–6 min", projected=True),
     SAGE_REPO: StartupEstimate("15–30 min", "3–8 min", projected=True),
     CYBER_FROST_REPO: StartupEstimate("6–14 hours", "10–30 min", projected=True),
@@ -188,6 +190,20 @@ def model_details(repo, *, ready=False, variant=""):
             "Listed prices (2026-10-19): A10 24 GB ~$1.29/hour; "
             "A6000 48 GB ~$1.09/hour, before tax.\n"
             "The launch confirmation uses current Lambda pricing and availability."
+        )
+    if repo == INKLING_REPO:
+        timing = (
+            "\n\nTransfer only: ~2–6 min on a fast GPU-host connection, projected from M.O.G.\n"
+            "Fresh startup includes boot, checksums, a ~10 GB compressed serving image and loading.\n"
+            "Slow links, capacity waits and CUDA graph capture can exceed these ranges.\n"
+            "Keep at least 128 GiB disk for weights, image extraction and working space.\n"
+            "Pinned Inkling-specific vLLM runtime with native tool/reasoning parsers and DSpark.\n"
+            "Both weight files, quantization configuration and tokenizer are verified before serving.\n"
+            "The 64K profile uses BF16 KV; larger context and vision are not enabled.\n"
+            "GPU family matters: 40/48 GB A100/A6000 options are unsupported despite the 32 GiB floor.\n"
+            "The Pi only coordinates this model; it cannot run in the Pi CPU profile.\n"
+            "No automatic host-driver updates; an incompatible CUDA runtime stops before model download.\n"
+            "Current Lambda price and capacity appear at launch confirmation."
         )
     if repo == SAGE_REPO:
         timing = (

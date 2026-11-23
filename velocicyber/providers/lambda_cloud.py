@@ -13,7 +13,7 @@ from pathlib import Path
 import httpx
 
 from velocicyber.engine.context import ContextBudget, served_context_window
-from velocicyber.models.gpu_profiles import GPU_PROFILES, MOG_SEC_REPO, gpu_profile
+from velocicyber.models.gpu_profiles import GPU_PROFILES, INKLING_REPO, MOG_SEC_REPO, gpu_profile
 from velocicyber.models.pi_profiles import PI_PROFILES
 from velocicyber.providers.huggingface import model_download_token
 from velocicyber.state import GPUStatus
@@ -287,6 +287,17 @@ class GPUManager:
             ):
                 raise ValueError("TensorFold profile requires 4-bit MCG EXL3 routed experts.")
             parsers[profile.family] = ("tensorfold", "tensorfold")
+        elif repo == INKLING_REPO:
+            quant = config.get("quantization_config", {})
+            if (config.get("architectures") != ["Inkling2LoopForConditionalGeneration"]
+                    or quant.get("quant_method") != "modelopt"
+                    or quant.get("quant_algo") != "NVFP4"):
+                raise ValueError("Inkling requires the reviewed loop architecture and native ModelOpt NVFP4 weights.")
+            required = {"model-00001-of-00001.safetensors", "mtp.safetensors", "hf_quant_config.json",
+                        "chat_template.jinja", "tokenizer.json", "tokenizer_config.json", "tiktoken/tokenizer.model"}
+            if not required.issubset({file.rfilename for file in info.siblings}):
+                raise ValueError("Inkling checkpoint is incomplete; main weights, MTP, quantization and tokenizer files are required.")
+            parsers[family] = ("inkling", "inkling")
         elif profile:
             # The packaged template emits <tool_call><function=...><parameter=...>.
             parsers[profile.family] = ("qwen3_coder", "qwen3")
@@ -298,9 +309,11 @@ class GPUManager:
         files = []
         if profile:
             for file in info.siblings:
-                if "/" in file.rfilename or not file.rfilename.endswith(
+                if (("/" in file.rfilename and not (
+                        repo == INKLING_REPO and file.rfilename == "tiktoken/tokenizer.model"
+                )) or not file.rfilename.endswith(
                     (".safetensors", ".json", ".jinja", ".model", ".txt", ".tiktoken")
-                ):
+                )):
                     continue
                 checksum = getattr(getattr(file, "lfs", None), "sha256", "") or ""
                 if file.size is None or (
@@ -310,7 +323,9 @@ class GPUManager:
                     raise ValueError("Model file sizes and weight SHA256 metadata are required.")
                 files.append({"filename": file.rfilename, "size": file.size, "sha256": checksum})
         text_config = config.get("text_config", config)
-        context_window = int(text_config.get("max_position_embeddings", 0))
+        context_window = int(text_config.get("max_position_embeddings", text_config.get("model_max_length", 0)))
+        if repo == INKLING_REPO and context_window < profile.context_window:
+            raise ValueError("Inkling checkpoint does not support the configured 64K context.")
         if repo == MOG_SEC_REPO:
             if context_window < profile.context_window:
                 raise ValueError("MOG checkpoint does not support the selected context window.")
@@ -624,6 +639,7 @@ class GPUManager:
             "download_files": spec.download_files,
             "extra_arguments": profile.arguments if profile else (),
             "max_num_seqs": 1 if profile else 2,
+            "vllm_cli": spec.repo == INKLING_REPO,
         }
         if spec.backend == "tensorfold":
             lock = json.loads((self.settings.root / "config/locks/serving.lock.json").read_text())
@@ -817,8 +833,11 @@ class GPUManager:
                         json={
                             "model": self.settings.local_model,
                             "messages": [{"role": "user", "content": "Reply with OK."}],
-                            "max_tokens": 32,
-                            "chat_template_kwargs": {"enable_thinking": False},
+                            "max_tokens": 256 if self.settings.local_model == INKLING_REPO else 32,
+                            "chat_template_kwargs": (
+                                {"reasoning_effort": "none"} if self.settings.local_model == INKLING_REPO
+                                else {"enable_thinking": False}
+                            ),
                         },
                     )
                     probe.raise_for_status()
@@ -870,9 +889,12 @@ class GPUManager:
                     }
                 ],
                 "tool_choice": "auto",
-                "max_tokens": 128,
+                "max_tokens": 256 if self.settings.local_model == INKLING_REPO else 128,
                 "temperature": 0,
-                "chat_template_kwargs": {"enable_thinking": False},
+                "chat_template_kwargs": (
+                    {"reasoning_effort": "none"} if self.settings.local_model == INKLING_REPO
+                    else {"enable_thinking": False}
+                ),
             },
         )
         response.raise_for_status()
@@ -891,6 +913,27 @@ class GPUManager:
                 "Text inference works, but the coding-tool parser check failed. "
                 "The model has not been enabled; inspect the serving configuration."
             )
+
+        if self.settings.local_model == INKLING_REPO:
+            # Exercise serialization of prior tool arguments/results, without running a tool.
+            call = {**calls[0], "id": calls[0].get("id") or "inkling-readiness"}
+            followup = await client.post(
+                self.state.local_url + "/chat/completions",
+                timeout=httpx.Timeout(120, connect=10, write=10, pool=10),
+                json={
+                    "model": self.settings.local_model,
+                    "messages": [
+                        {"role": "user", "content": "Call readiness_probe with value OK, then report its result."},
+                        {"role": "assistant", "content": None, "tool_calls": [call]},
+                        {"role": "tool", "tool_call_id": call["id"], "name": "readiness_probe", "content": "OK"},
+                    ],
+                    "max_tokens": 256,
+                    "chat_template_kwargs": {"reasoning_effort": "none"},
+                },
+            )
+            followup.raise_for_status()
+            if not followup.json()["choices"][0]["message"].get("content"):
+                raise RuntimeError("Inkling tool-result follow-up returned no text; model not enabled.")
 
     async def close_tunnel(self):
         self.state.model_ready = False

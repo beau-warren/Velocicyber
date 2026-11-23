@@ -55,6 +55,19 @@
       "reviewed_gguf_filename": "Flint-abliterated-Mix-24G.gguf",
       "reviewed_weight_bytes": 23993808416,
       "reviewed_weight_sha256": "f416403575f77a10e6e12bfd3eb919c727a610c9c622b72fd32de0c4f220fdbd"
+    },
+    "Blackfrost-AI/Inkling-2-Mini-Derisked": {
+      "image": "vllm/vllm-openai@sha256:a485440c62099c39659a7b723636073ed726dcb41f94cf6326e16af3a1d6f6bc",
+      "source_tag": "inkling-2-mini",
+      "checked_on": "2026-11-23",
+      "backend": "vllm",
+      "reason": "Official linux/amd64 Inkling build (CUDA 13.0.3), explicit vllm serve entrypoint, inkling parsers and DSpark. 64K single Hopper/Blackwell text+tools profile; live Lambda validation pending.",
+      "reviewed_model_revision": "31ec2eddecfdf93c8626d9e4dfc0a2aca6070900",
+      "reviewed_weight_bytes": 20161820584,
+      "reviewed_weight_sha256": {
+        "model-00001-of-00001.safetensors": "b1156b5d53ddabf927a8e3f209eebc5da610d2b90ed8c14a6a945b78080bef21",
+        "mtp.safetensors": "7c3b651317f01f73bcf4e1dceba66ef8b7e1a1eac6bc171e882e690a4b10a1d2"
+      }
     }
   }
 }

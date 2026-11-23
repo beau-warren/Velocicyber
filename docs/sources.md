@@ -45,6 +45,7 @@ Provider privacy-policy links are in [security and privacy guidance](../SECURITY
 | [ik_llama.cpp](https://github.com/ikawrakow/ik_llama.cpp), [pinned revision](https://github.com/ikawrakow/ik_llama.cpp/tree/32cddbfcefed93896a39c64e7c38c119de8682e6) | Qwen/BugTrace Pi coding and the Qwen sentinel; commit `32cddbfcefed`. [Qwen lock](../config/locks/pi-model.lock.json), [BugTrace lock](../config/locks/pi-bugtrace.lock.json). |
 | [llama.cpp](https://github.com/ggml-org/llama.cpp), [server documentation](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) | LFM3 Pi conversion/serving **b12124**; Granite sentinel **b11669**; OrcaCyber Lambda **b11723**; Flint Lambda **b12124**. [LFM3 lock](../config/locks/pi-lfm3.lock.json), [sentinel lock](../config/locks/sentinel-model.lock.json), [GPU serving lock](../config/locks/serving.lock.json). |
 | [vLLM](https://github.com/vllm-project/vllm), [serving documentation](https://docs.vllm.ai/en/latest/serving/online_serving/) | SAGE and M.O.G. use **v0.29.0-cu129**; CYBER-FROST uses **v0.30.0-cu129**. Each profile has a pinned container digest in the [GPU serving lock](../config/locks/serving.lock.json). |
+| [vLLM Inkling support](https://vllm.ai/blog/2026-11-20-inkling2-mini), [serving recipe](https://recipes.vllm.ai/thinkingmachines/Inkling-2-Mini) | Inkling uses its dedicated `inkling-2-mini` CUDA 13 image, pinned by digest for Linux AMD64; native parsers and DSpark. [Requirements](models.md#inkling-2-mini-derisked). |
 | [TensorFold](https://github.com/ashhart/TensorFold), [pinned revision](https://github.com/ashhart/TensorFold/tree/ed78d6fc204d89d90b045bf033d6551e7714f3a1) | Experimental GLM EXL3 serving with the Python runtime at `ed78d6fc204d`. [GPU serving lock](../config/locks/serving.lock.json). |
 
 <a name="model-cards-and-weights"></a>
@@ -67,6 +68,7 @@ installation; GPU weights download to the selected Lambda instance.
 | [orcarouter/Flint-abliterated-GGUF](https://huggingface.co/orcarouter/Flint-abliterated-GGUF) | Lambda coding with **Mix-24G GGUF**, **64K** harness context; gated access. [Requirements and validation](models.md#flint-mix-24g). |
 | [Blackfrost-AI/CYBER-FROST-3.8-BF16](https://huggingface.co/Blackfrost-AI/CYBER-FROST-3.8-BF16) | Lambda coding with BF16 weights. [Requirements and validation](models.md#cyber-frost-38-bf16). |
 | [Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold](https://huggingface.co/Mia-AiLab/GLM-5.3-Flash-EXL3-4bpw-TensorFold) | Experimental Lambda coding with **EXL3/BF16** weights. [Requirements and validation](models.md#glm-53-flash-exl3tensorfold). |
+| [Blackfrost-AI/Inkling-2-Mini-Derisked](https://huggingface.co/Blackfrost-AI/Inkling-2-Mini-Derisked) | Lambda coding with native NVFP4/MXFP8 weights, MTP/DSpark, **64K** context. [Requirements and validation](models.md#inkling-2-mini-derisked). |
 | [Blackfrost-AI/SAGE-A1P5-DERISKED-BF16-V2](https://huggingface.co/Blackfrost-AI/SAGE-A1P5-DERISKED-BF16-V2) | Lambda coding with BF16 weights. [Requirements and validation](models.md#sage-a1p5-bf16-v2). |
 
 Pi and Granite downloads use fixed revisions and checksums. Lambda deployment
